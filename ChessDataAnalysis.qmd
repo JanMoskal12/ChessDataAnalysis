@@ -1,0 +1,28 @@
+---
+title: "ChessDataAnalysis"
+author: "Jan Moskal"
+format: html
+editor: visual
+---
+
+```{python}
+import berserk
+import pandas as pd
+
+with open('../Lichess_API_token.txt', 'r') as file:
+    api_token = file.read().strip()
+
+# Authentication with Personal Token
+session = berserk.TokenSession(api_token)
+client = berserk.Client(session=session)
+
+l = client.users.get_leaderboard("blitz", count = 200)
+df = pd.DataFrame(l)
+best_200_players_names = df['username']
+all_games = pd.DataFrame()
+for names in best_200_players_names:
+  games = client.games.export_by_player(names, as_pgn = False, max = 20, rated = True, perf_type = "blitz")
+  games = pd.DataFrame(games)
+  all_games = pd.concat([all_games, games],axis = 0, ignore_index = True)
+pass
+```
