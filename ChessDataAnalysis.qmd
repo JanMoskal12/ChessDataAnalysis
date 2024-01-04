@@ -5,8 +5,11 @@ format: html
 editor: visual
 ---
 
+
+## Retrieving Lichess Game Data for Top Players by Time Control
 ```{python}
 import berserk
+import time
 import pandas as pd
 
 with open('../Lichess_API_token.txt', 'r') as file:
@@ -16,13 +19,91 @@ with open('../Lichess_API_token.txt', 'r') as file:
 session = berserk.TokenSession(api_token)
 client = berserk.Client(session=session)
 
-l = client.users.get_leaderboard("blitz", count = 200)
-df = pd.DataFrame(l)
-best_200_players_names = df['username']
-all_games = pd.DataFrame()
-for names in best_200_players_names:
-  games = client.games.export_by_player(names, as_pgn = False, max = 20, rated = True, perf_type = "blitz")
-  games = pd.DataFrame(games)
-  all_games = pd.concat([all_games, games],axis = 0, ignore_index = True)
-pass
+# Function to fetch top 200 players for a given time control
+def top_200_players(prefType):
+    best_players = client.users.get_leaderboard(prefType, count=200)
+    best_players = pd.DataFrame(best_players)
+    best_players_names = best_players['username']
+    return best_players_names
+
+# Fetching top players for various time controls
+best_ultrabullet_players_names = top_200_players("ultraBullet")
+best_bullet_players_names = top_200_players("bullet")
+best_blitz_players_names = top_200_players("blitz")
+best_rapid_players_names = top_200_players("rapid")
+best_classical_players_names = top_200_players("classical")
+
+# Function to retrieve games for a list of players
+def get_games_for_players(player_series, pref_type, game_count=20):
+    all_games = pd.DataFrame()
+    batch_size = 10  # Number of players to fetch at a time
+    player_list = player_series.tolist()  # Convert Series to list
+    for i in range(0, len(player_list), batch_size):
+        batch_players = player_list[i:i + batch_size]
+        for name in batch_players:
+            success = False
+            while not success:
+                try:
+                    # Retrieve games for each player
+                    games = client.games.export_by_player(username=name, as_pgn=False, rated=True, max=game_count, perf_type=pref_type, moves=True, pgn_in_json=True, tags=True, clocks=True, evals=True, opening=True, finished=True, literate=True)
+                    if games:  # Check if games exist for the player
+                        games_df = pd.DataFrame(games)
+                        all_games = pd.concat([all_games, games_df], ignore_index=True)
+                    success = True
+                except:
+                    print(f"Rate limit reached. Waiting for 70 seconds before retrying!")
+                    time.sleep(70)
+    return all_games
+
+# Fetch games for different time controls
+blitz_games = get_games_for_players(best_blitz_players_names, "blitz")
+rapid_games = get_games_for_players(best_rapid_players_names, "rapid")
+bullet_games = get_games_for_players(best_bullet_players_names, "bullet")
+ultrabullet_games = get_games_for_players(best_ultrabullet_players_names, "ultraBullet")
+classical_games = get_games_for_players(best_classical_players_names, "classical")
+
+# Concatenate all game dataframes
+all_games_frames = [blitz_games, rapid_games, bullet_games, ultrabullet_games, classical_games]
+all_games = pd.concat(all_games_frames, ignore_index=True)
+
+# Select specific columns for analysis
+selected_columns = ['id', 'rated', 'variant', 'speed', 'perf', 'status', 'players', 'winner', 'opening', 'moves', 'pgn', 'analysis', 'createdAt', 'lastMoveAt']
+subset_data = all_games.loc[:, selected_columns]
+
+# Save subset data to JSON file
+subset_data.to_json('games_data.json', orient='records')
 ```
+
+
+## Data Wrangling and Unnesting of JSON Game Data from Lichess
+```{r}
+library(jsonlite)
+library(tidyverse)
+
+# Reading JSON file containing Lichess game data
+data <- fromJSON("games_data.json")
+
+# Unnesting the 'players' column
+data <- unnest_wider(data, players, names_sep = "_")
+data <- unnest_wider(data, players_white, names_sep = "_")
+data <- unnest_wider(data, players_black, names_sep = "_")
+data <- unnest_wider(data, players_white_user, names_sep = "_")
+data <- unnest_wider(data, players_black_user, names_sep = "_")
+data <- unnest_wider(data, players_white_analysis, names_sep = "_")
+data <- unnest_wider(data, players_black_analysis, names_sep = "_")
+# Unnesting the 'analysis' column
+data <- unnest_wider(data, analysis, names_sep = "_")
+
+# Unnesting the 'opening' column 
+data <- unnest_wider(data, opening, names_sep = "_")
+
+# Unselecting columns from data
+data <- data %>% 
+          select(-c(analysis_judgment, analysis_best, analysis_variation))
+
+# Writing the cleaned data to a CSV file
+write_csv(data, "games_data.csv")
+```
+
+
+
