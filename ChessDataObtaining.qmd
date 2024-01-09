@@ -5,7 +5,6 @@ format: html
 editor: visual
 ---
 
-
 ## Retrieving Lichess Game Data for Top Players by Time Control
 ```{python}
 import berserk
@@ -74,11 +73,10 @@ subset_data = all_games.loc[:, selected_columns]
 subset_data.to_json('games_data.json', orient='records')
 ```
 
-
 ## Data Wrangling and Unnesting of JSON Game Data from Lichess
 ```{r}
-library(jsonlite)
 library(tidyverse)
+library(jsonlite)
 
 # Reading JSON file containing Lichess game data
 data <- fromJSON("games_data.json")
@@ -104,6 +102,5 @@ data <- data %>%
 # Writing the cleaned data to a CSV file
 write_csv(data, "games_data.csv")
 ```
-
 
 

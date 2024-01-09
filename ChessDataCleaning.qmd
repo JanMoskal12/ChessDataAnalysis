@@ -1,0 +1,17 @@
+---
+title: "ChessDataAnalysis"
+format: html
+editor: visual
+---
+
+
+```{r}
+Data <- read_csv("games_data.csv")
+
+Data %>% 
+  mutate(is_perf_speed = (speed == perf), .keep = "used") %>% 
+  count(is_perf_speed)
+
+Data <- Data %>% 
+         select(-perf)
+```
