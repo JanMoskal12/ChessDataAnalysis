@@ -4,14 +4,68 @@ format: html
 editor: visual
 ---
 
-
 ```{r}
 Data <- read_csv("games_data.csv")
 
-Data %>% 
-  mutate(is_perf_speed = (speed == perf), .keep = "used") %>% 
-  count(is_perf_speed)
+glimpse(Data)
+View(Data)
 
-Data <- Data %>% 
-         select(-perf)
+Data %>% group_by(players_white_user_name) %>% count(sort = TRUE)
+Data %>% group_by(players_white_user_id) %>% count(sort = TRUE)
+Data %>% group_by(players_black_user_name) %>% count(sort = TRUE)
+Data %>% group_by(players_black_user_id) %>% count(sort = TRUE)
+# There are no repeating user names (they repeat in matches but uniquely identify the player)
+
+Data <- Data %>% select(-perf)
+# Removing 'perf' because it holds the same information as 'speed'
+
+Data <- Data %>% select(-players_white_user_id, -players_black_user_id)
+# Removing 'white_user_id' and 'black_user_id' because they are not needed (uniquely identifying player names)
+
+Data <- Data %>% select(-players_white_user_flair, -players_black_user_flair)
+# Removing 'players_white_user_flair' and 'players_black_user_flair' as they won't be useful in this analysis
+
+Data <- Data %>% select(-players_white_user_patron, -players_black_user_patron)
+# Removing 'players_white_user_patron' and 'players_black_user_patron' as they won't be useful in this analysis
+
+Data <- Data %>% mutate(duration_in_milliseconds = (lastMoveAt - createdAt)) %>% select(-createdAt, -lastMoveAt)
+# Removing 'createdAt' and 'lastMoveAt' because they won't be useful except for measuring the game duration, hence creating 'duration_in_milliseconds'
+
+Data <- Data %>% select(-pgn)
+# Removing 'pgn' because I already have all the data that I could extract from it in the table
+
+Data <- Data %>% select(-opening_ply)
+# Removing 'opening_ply' because it won't be useful in this analysis
+
+Data <- Data %>% select(-rated)
+# Removing 'rated' because it's not needed, as all games are ranked
+
+Data <- Data %>% select(-players_white_ratingDiff, -players_black_ratingDiff)
+# Removing 'players_white_ratingDiff' and 'players_black_ratingDiff' because they won't be useful in this analysis
+
 ```
+
+```{r}
+Data <- Data %>%
+  mutate(
+    players_white_provisional = if_else(is.na(players_white_provisional), FALSE, TRUE),
+    players_black_provisional = if_else(is.na(players_black_provisional), FALSE, TRUE),
+    players_white_user_title = if_else(is.na(players_white_user_title), "None", players_white_user_title),
+    players_black_user_title = if_else(is.na(players_black_user_title), "None", players_black_user_title),
+    winner = if_else(is.na(winner), "draw", winner))
+
+
+Data <- Data %>%
+  mutate(
+    across(c(variant, speed, status, winner, players_white_user_title, players_black_user_title, opening_eco), as.factor),
+    across(c(id, players_white_user_name, players_black_user_name, opening_name, moves, analysis_eval), as.character),
+    across(c(players_white_provisional, players_black_provisional), as.logical),
+    across(c(players_white_rating:players_white_analysis_acpl, players_black_rating:players_black_analysis_acpl, duration_in_miliseconds), as.integer)
+  )
+
+levels(Data$players_black_user_title) <- levels(Data$players_white_user_title)
+
+saveRDS(Data, "cleaned_data.rds")
+```
+
+

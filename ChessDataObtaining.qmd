@@ -6,6 +6,7 @@ editor: visual
 ---
 
 ## Retrieving Lichess Game Data for Top Players by Time Control
+
 ```{python}
 import berserk
 import time
@@ -74,6 +75,7 @@ subset_data.to_json('games_data.json', orient='records')
 ```
 
 ## Data Wrangling and Unnesting of JSON Game Data from Lichess
+
 ```{r}
 library(tidyverse)
 library(jsonlite)
@@ -89,6 +91,7 @@ data <- unnest_wider(data, players_white_user, names_sep = "_")
 data <- unnest_wider(data, players_black_user, names_sep = "_")
 data <- unnest_wider(data, players_white_analysis, names_sep = "_")
 data <- unnest_wider(data, players_black_analysis, names_sep = "_")
+
 # Unnesting the 'analysis' column
 data <- unnest_wider(data, analysis, names_sep = "_")
 
@@ -97,10 +100,10 @@ data <- unnest_wider(data, opening, names_sep = "_")
 
 # Unselecting columns from data
 data <- data %>% 
-          select(-c(analysis_judgment, analysis_best, analysis_variation))
+          select(-c(analysis_judgment, analysis_best, analysis_variation, analysis_mate))
+
+data$analysis_eval <- sapply(data$analysis_eval, function(x) paste(x, collapse = ","))
 
 # Writing the cleaned data to a CSV file
 write_csv(data, "games_data.csv")
 ```
-
-
