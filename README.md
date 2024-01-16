@@ -1,8 +1,8 @@
 # ChessDataAnalysis
 
-## Data Dictionary
+## `cleaned_data.csv`
 
-### `cleaned_data.csv`
+### Data Dictionary
 
 | variable                          | class     | description                                   |
 |:-----------------------|:-----------------|:-----------------------------|

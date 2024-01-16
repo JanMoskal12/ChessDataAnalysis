@@ -1,0 +1,21 @@
+---
+title: "ChessDataAnalysyis"
+author: "Jan Moskal"
+format: html
+editor: visual
+---
+
+```{r, include=FALSE, message=FALSE, warning=FALSE}
+library(tidyverse)
+```
+
+
+```{r}
+data <- readRDS("cleaned_data.rds")
+
+
+View(data)
+glimpse(data)
+
+
+```
