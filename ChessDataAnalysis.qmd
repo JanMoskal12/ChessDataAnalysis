@@ -207,7 +207,7 @@ data %>%
 
 ### Players user provisional:
 
-
+Czy gracze tymczasowi mają tendencję do częstszego czy rzadszego wygrywania?
 ```{r}
 data %>% 
   ggplot(aes(x = players_white_provisional, fill = winner)) +
@@ -216,19 +216,47 @@ data %>%
 data %>% 
   ggplot(aes(x = players_black_provisional, fill = winner)) +
   geom_bar(position = "fill")
+
+# Gracze z nowymi kontami mają sporo więcej porażek
 ```
 
+Czy istnieje związek między graczem tymczasowym, a formatem czasowym?
+```{r}
+data %>% 
+  mutate(provisional = players_white_provisional | players_black_provisional) %>% 
+  ggplot(aes(x = fct_infreq(speed, w = as.integer(provisional)), fill = provisional)) +
+  geom_bar()
+```
+
+
+### Duration:
+
+Jaki jest związek między długością gry w sekundach, a ACPL?
 ```{r}
 data %>% 
   mutate(duration_in_seconds = duration_in_miliseconds / 1000) %>% 
   ggplot(aes(y = players_white_analysis_acpl, x = duration_in_seconds)) +
   geom_point(alpha = 0.2, color = "red") +
-  geom_smooth()
-
+  geom_smooth() +
+  scale_y_continuous(breaks = seq(from = 0, to = 200, by = 20)) +
+  ylim(0, 200) +
+  xlim(0, 10000) 
 ```
 
 
-
+```{r}
+first_move_data <- data %>% 
+  mutate(first_move = str_extract(moves, "^\\w+"))
+  
+top_5_moves <- first_move_data %>% 
+  count(first_move, sort = TRUE) %>% 
+  head(n = 5) 
+  
+  first_move_data %>% 
+  filter(first_move %in% top_5_moves$first_move) %>% 
+  ggplot(aes(x = speed, fill = first_move)) +
+  geom_bar(position = "fill")
+```
 
 
 
