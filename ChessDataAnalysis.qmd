@@ -244,6 +244,10 @@ data %>%
 ```
 
 
+
+### Moves:
+
+Jak wygląda dystrybucja dla pierwszego ruchu w zależności od formatu czasowego?
 ```{r}
 first_move_data <- data %>% 
   mutate(first_move = str_extract(moves, "^\\w+"))
