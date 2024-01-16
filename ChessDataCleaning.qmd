@@ -67,5 +67,3 @@ levels(Data$players_black_user_title) <- levels(Data$players_white_user_title)
 
 saveRDS(Data, "cleaned_data.rds")
 ```
-
-

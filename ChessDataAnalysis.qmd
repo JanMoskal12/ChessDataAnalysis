@@ -9,13 +9,226 @@ editor: visual
 library(tidyverse)
 ```
 
-
 ```{r}
 data <- readRDS("cleaned_data.rds")
 
 
 View(data)
 glimpse(data)
+```
 
+### Variant:
+
+Przyglądam się tutaj, niewielkiej liczbie gier, które rozpoczynają się z pewnej ustalonej przez graczy pozycji
+
+```{r}
+data %>% 
+  count(variant)
+
+data %>% 
+  filter(variant == "fromPosition") %>% 
+  count(players_white_user_name, sort = TRUE) %>% 
+  head(n = 1) %>%  select(players_white_user_name)
+```
+
+Nie ma tutaj jednak nic ciekawego, za sporą liczbę meczy (9/27) odpowiada jeden gracz 'Monkey King'
+
+### Speed:
+
+Przyglądam się tutaj, jak dzielą się wygrane i przegrane dla formatów czasowych
+
+```{r}
+
+data %>%  
+  ggplot(aes(x = factor(speed, levels = c("ultraBullet", "bullet", "blitz", "rapid","classical")), fill = winner)) +
+  geom_bar(position = "fill") +
+  labs(x = NULL, y = "Stosunek wygranych,przegranych i zremisowanych meczy", fill = "Zwycięzca", 
+       title = "Dystrybucja zwycięstw dla poszczególnych formatów czasowych") +
+  scale_fill_manual(values = c("black" ="black", "draw" = "grey", "white" = "white")) +
+  theme(panel.background = element_rect(fill = "lightgrey"),
+        legend.background = element_rect(fill = "lightblue"),
+        plot.background = element_rect(fill = "lightgrey")) 
+
+  
+```
+
+Jak widać wraz z większą ilością czasu gry rośnie liczba remisów. Jest to jaknajbardziej logiczne, gracze mają więcej czasu na analizę, planowanie i liczenie wariantów, po obu stronach popełniają mniej poważnych błędów przez co partia jest bardziej wyrównana. Widać również, że wygrane graczy z białymi i czarnymi figurami są na podobnym poziomie, to zjawisko wynika z charakterystyki analizowanego zestawu danych. Mamy tutaj do czynienia z najlepszymi graczami w konkretnych formatach czasowych na Lichess. Silniejsi i bardziej doświadczeni gracze są w stanie efektywnie korzytsać z obu stron planszy, co prowadzi do równomiernej dystrybucji zwycięstw.
+
+Dla kontrastu dane dotyczące przeciętnych graczy Lichessa: 
+
+Sprawdzam czy któreś otwarcia pojawiają się częściej w poszczególnych formatach czasowych
+
+```{r}
+data %>% group_by(opening_name) %>% count(sort = TRUE) #defensywne, w top 10 tylko dwa otwarcia 1.e4 tylko dwa mecze na 20000 z King's Knight Opening
+
+ubu_opening <- data %>% filter(speed == "ultraBullet") %>% 
+  group_by(opening_name) %>%  count(sort = TRUE)  # defensywne i elastyczne, "krótkie" ruchy bardzo popularne
+
+bu_opening <- data %>% filter(speed == "bullet") %>% 
+  group_by(opening_name) %>%  count(sort = TRUE) #elastyczne trochę więcej ruchów z 1.e4, dużo większa liczba unikalnych otwarć
+
+bl_opening <- data %>% filter(speed == "blitz") %>% 
+  group_by(opening_name) %>%  count(sort = TRUE) # mniej defensywnie, obrona sycylisjka (więcej 1.e4)
+
+ra_opening <- data %>% filter(speed == "rapid") %>% 
+  group_by(opening_name) %>%  count(sort = TRUE) # solidne, bardziej agresywne otwarcia sporo 1.e4 caro-kann
+
+cl_opening <- data %>% filter(speed == "classical") %>% 
+  group_by(opening_name) %>%  count(sort = TRUE) # solidne, więcej 1.e4
+
+print(c(nrow(ubu_opening), nrow(bu_opening), nrow(bl_opening), nrow(ra_opening), nrow(cl_opening)))
+```
+
+Liczba unikalnych otwarć wzrasta wraz z długością gry. W skrócie, w miarę wydłużania się czasu na partię, gracze są bardziej skłonni eksperymentować z różnymi otwarciami, a strategie stają się bardziej zróżnicowane. W szybszych formatach często dominują ruchy elastyczne, a w dłuższych partach pojawiają się bardziej solidne i strategiczne otwarcia.
+
+Jak wygląda dystrybucja tytułów graczy w zależności od formatu czasowego?
+
+```{r}
+w_players <- data %>%
+  select(speed, players_white_user_name, players_white_user_title) %>%
+  rename(player = players_white_user_name, 
+         title = players_white_user_title)
+b_players <- data %>%
+  select(speed, players_black_user_name, players_black_user_title) %>% 
+    rename(player = players_black_user_name, 
+         title = players_black_user_title)
+
+
+players_titles <- rbind(w_players, b_players) %>% distinct(player, speed, .keep_all = TRUE) # Wszyscy gracze z bazy z ich tytułami (liczeni kilukrotnie po formacie czasowym)
+
+most_comon_titles <- data %>% 
+  group_by(players_white_user_title) %>% 
+  count(sort = TRUE) %>%  filter(n > 10)
+
+players_titles %>% 
+  filter(title %in% most_comon_titles$players_white_user_title) %>% 
+  ggplot(aes(x = fct_infreq(speed), fill = title)) +
+  geom_bar()
+
+
+players_titles %>% 
+  filter(title %in% most_comon_titles$players_white_user_title) %>% 
+  ggplot(aes(x = fct_infreq(speed), fill = title)) +
+  geom_bar(position = "fill")
+```
+
+Taki rozkład graczy tytulowanych dla każdego formatu czasowego jest z pewnością związany z umiejętnościami i doświadczeniem graczy.Silni gracze mogą być bardziej skłonni do wybierania szybszych partii, podczas gdy gracze bez tytułów mogą preferować dłuższe partie, gdzie mają więcej czasu na analizę i naukę. To zjawisko może wpływać na obserwowaną dystrybucję tytułów w różnych formatach czasowych. Te dwa wykresy ukazują wiele rzeczy, część może wydawać się nieintuicyjna np. w drugim wykresie stosunek graczy bez tytułu do wszystkich graczy spada wraz ze spadkiem długości meczu, jednak nie dla ultraBulleta, dlaczego Moje hipoteza to możliwość unikania ultraBulleta przez graczy tytułowanych, ponieważ preferują bardziej zaawansowane i strategiczne gry, gdzie ich umiejętności są lepiej wykorzystywane. UltraBullet, charakteryzujący się szybkimi ruchami i chaotyczną rozgrywką, przyciąga różnorodne grupy graczy, a dominacja graczy bez tytułów może wynikać z bardziej rekreacyjnego podejścia do tej formy rozgrywki. Na wykresie pierwszym w oczy rzuca się jeszcze jedna rzecz to znaczy: im krótszy format czasowy tym mniejsza różnorodność graczy. To może mieć powiązanie z tym co piałem wcześniej, wielu graczy nietytułowanych próbuje swoich sił w szachach klasycznych, dlatego jest ich tak dużo, za to w szachach szybkich i blyskawicznych rządzą mocni gracze tytułowani i nie ma aż tak dużo graczy nietytułowanych (wciąż bardzo dużo)
+
+Jak powiązany jest ranking graczy z ich tytułąmi?
+
+```{r}
+w_players_rt <- data %>%
+  select(players_white_user_title, players_white_user_name, players_white_rating, speed) %>%
+  rename(player = players_white_user_name, 
+         title = players_white_user_title,
+         rating = players_white_rating)
+
+b_players_rt <- data %>%
+  select(players_black_user_title, players_black_user_name, players_black_rating, speed) %>% 
+    rename(player = players_black_user_name, 
+           title = players_black_user_title,
+           rating = players_black_rating)
+
+players_ratings_titles <- rbind(w_players_rt, b_players_rt) %>%
+  distinct(player, speed, .keep_all = TRUE)
+
+players_ratings_titles %>% 
+  filter(title %in% most_comon_titles$players_white_user_title) %>%
+  ggplot(aes(x = reorder(title, -rating), y = rating, fill = reorder(title, -rating))) +
+  geom_boxplot() +
+  theme_minimal() +
+  theme(legend.position = "none") + 
+  labs(y = "Ranking gracza", x = "Tytuł gracza") #+
+  #facet_wrap(~speed)
+```
+
+Nie ma tutaj nic zaskakującego gracze, gracze z najwyższymi tytułami mają najwyższe rankingi
+
+Czy istnieje związek między rankiem graczy a formatem czasowym?
+
+```{r}
+w_players_r <- data %>%
+  select(speed, players_white_user_name, players_white_rating) %>%
+  rename(player = players_white_user_name, 
+         rating = players_white_rating)
+
+b_players_r <- data %>%
+  select(speed, players_black_user_name, players_black_rating) %>% 
+    rename(player = players_black_user_name, 
+         rating = players_black_rating)
+
+
+players_ratings <- rbind(w_players_r, b_players_r) %>% distinct(player, speed, .keep_all = TRUE) # Zamiast usuwać powtarzające się to zamienić na średnią to dać średnią
+
+players_ratings %>% 
+  group_by(speed) %>% 
+  ggplot(aes(x = rating, color = speed)) +
+  geom_freqpoly(linewidth = 2)
+```
+
+Tutaj widać, to o czym wcześniej mówiłem to znaczy gracze bez tytułów, wybierają chętniej partie z wiekszą ilością czasu, za to gracze z tytułami te krótsze formaty. Tutaj po rankingach można zobaczyć to samo.
+
+
+Czy średnia analiza ACPL różni się między konkretnymi formatami czasowymi?
+```{r}
+w_players_acpl <- data %>%
+  select(speed, players_white_user_name, players_white_analysis_acpl) %>%
+  rename(player = players_white_user_name, 
+         acpl = players_white_analysis_acpl)
+
+b_players_acpl <- data %>%
+  select(speed, players_black_user_name, players_black_analysis_acpl) %>% 
+    rename(player = players_black_user_name, 
+           acpl = players_black_analysis_acpl)
+
+players_acpl <- rbind(w_players_acpl, b_players_acpl) %>% 
+  distinct(player, speed, .keep_all = TRUE)
+
+
+players_acpl %>% 
+  ggplot(aes(x = fct_reorder(speed, -acpl), y = acpl, fill = speed)) +
+  geom_boxplot() +
+  labs(x = NULL, y = "Average Centipawn Loss dla graczy") +
+  theme(legend.position = "none")
+```
+Tak jak można było się spodziewać, w grach z większym ograniczniem czasowym gracze popełniają więcej poważnych błędów
+
+
+### Status:
+
+Jak będzię wyglądała dystrybucja poszczególnych statusów dla różnych formatów czasowych?
+```{r}
+data %>% 
+  ggplot(aes(x = speed, fill = status)) +
+  geom_bar(position = "fill") +
+  labs(x = NULL)
+```
+
+
+### Players user provisional:
+
+
+```{r}
+data %>% 
+  ggplot(aes(x = players_white_provisional, fill = winner)) +
+  geom_bar(position = "fill")
+
+data %>% 
+  ggplot(aes(x = players_black_provisional, fill = winner)) +
+  geom_bar(position = "fill")
+```
+
+```{r}
+data %>% 
+  mutate(duration_in_seconds = duration_in_miliseconds / 1000) %>% 
+  ggplot(aes(y = players_white_analysis_acpl, x = duration_in_seconds)) +
+  geom_point(alpha = 0.2, color = "red") +
+  geom_smooth()
 
 ```
+
+
+
+
+
+
