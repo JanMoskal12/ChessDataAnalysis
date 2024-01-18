@@ -7,9 +7,12 @@ editor: visual
 
 ```{r, include=FALSE, message=FALSE, warning=FALSE}
 library(tidyverse)
+library(networkD3)
+library(plotly)
+library(gganimate)
 ```
 
-```{r}
+```{r, include=FALSE}
 data <- readRDS("cleaned_data.rds")
 
 
@@ -54,7 +57,7 @@ data %>%
 
 Jak widać wraz z większą ilością czasu gry rośnie liczba remisów. Jest to jaknajbardziej logiczne, gracze mają więcej czasu na analizę, planowanie i liczenie wariantów, po obu stronach popełniają mniej poważnych błędów przez co partia jest bardziej wyrównana. Widać również, że wygrane graczy z białymi i czarnymi figurami są na podobnym poziomie, to zjawisko wynika z charakterystyki analizowanego zestawu danych. Mamy tutaj do czynienia z najlepszymi graczami w konkretnych formatach czasowych na Lichess. Silniejsi i bardziej doświadczeni gracze są w stanie efektywnie korzytsać z obu stron planszy, co prowadzi do równomiernej dystrybucji zwycięstw.
 
-Dla kontrastu dane dotyczące przeciętnych graczy Lichessa: 
+Dla kontrastu dane dotyczące przeciętnych graczy Lichessa:
 
 Sprawdzam czy któreś otwarcia pojawiają się częściej w poszczególnych formatach czasowych
 
@@ -168,8 +171,8 @@ players_ratings %>%
 
 Tutaj widać, to o czym wcześniej mówiłem to znaczy gracze bez tytułów, wybierają chętniej partie z wiekszą ilością czasu, za to gracze z tytułami te krótsze formaty. Tutaj po rankingach można zobaczyć to samo.
 
-
 Czy średnia analiza ACPL różni się między konkretnymi formatami czasowymi?
+
 ```{r}
 w_players_acpl <- data %>%
   select(speed, players_white_user_name, players_white_analysis_acpl) %>%
@@ -191,12 +194,13 @@ players_acpl %>%
   labs(x = NULL, y = "Average Centipawn Loss dla graczy") +
   theme(legend.position = "none")
 ```
-Tak jak można było się spodziewać, w grach z większym ograniczniem czasowym gracze popełniają więcej poważnych błędów
 
+Tak jak można było się spodziewać, w grach z większym ograniczniem czasowym gracze popełniają więcej poważnych błędów
 
 ### Status:
 
 Jak będzię wyglądała dystrybucja poszczególnych statusów dla różnych formatów czasowych?
+
 ```{r}
 data %>% 
   ggplot(aes(x = speed, fill = status)) +
@@ -204,10 +208,10 @@ data %>%
   labs(x = NULL)
 ```
 
-
 ### Players user provisional:
 
 Czy gracze tymczasowi mają tendencję do częstszego czy rzadszego wygrywania?
+
 ```{r}
 data %>% 
   ggplot(aes(x = players_white_provisional, fill = winner)) +
@@ -221,6 +225,7 @@ data %>%
 ```
 
 Czy istnieje związek między graczem tymczasowym, a formatem czasowym?
+
 ```{r}
 data %>% 
   mutate(provisional = players_white_provisional | players_black_provisional) %>% 
@@ -228,26 +233,10 @@ data %>%
   geom_bar()
 ```
 
-
-### Duration:
-
-Jaki jest związek między długością gry w sekundach, a ACPL?
-```{r}
-data %>% 
-  mutate(duration_in_seconds = duration_in_miliseconds / 1000) %>% 
-  ggplot(aes(y = players_white_analysis_acpl, x = duration_in_seconds)) +
-  geom_point(alpha = 0.2, color = "red") +
-  geom_smooth() +
-  scale_y_continuous(breaks = seq(from = 0, to = 200, by = 20)) +
-  ylim(0, 200) +
-  xlim(0, 10000) 
-```
-
-
-
 ### Moves:
 
 Jak wygląda dystrybucja dla pierwszego ruchu w zależności od formatu czasowego?
+
 ```{r}
 first_move_data <- data %>% 
   mutate(first_move = str_extract(moves, "^\\w+"))
@@ -262,5 +251,164 @@ top_5_moves <- first_move_data %>%
   geom_bar(position = "fill")
 ```
 
+### Duration:
 
+Jaki jest związek między długością gry w sekundach, a ACPL?
+
+```{r}
+data %>% 
+  mutate(duration_in_seconds = duration_in_miliseconds / 1000) %>% 
+  ggplot(aes(y = players_white_analysis_acpl, x = duration_in_seconds)) +
+  geom_point(alpha = 0.2, color = "red") +
+  geom_smooth() +
+  scale_y_continuous(breaks = seq(from = 0, to = 200, by = 20)) +
+  ylim(0, 200) +
+  xlim(0, 10000) 
+```
+
+```{r}
+players_titles_connections <- data %>% 
+  mutate(winner = case_when(
+    winner == "white" ~ 1,
+    winner == "black" ~ 0,
+    winner == "draw" ~ 0.5)) %>% 
+  group_by(players_white_user_title, players_black_user_title) %>% 
+  summarise(n = n(),
+            mean_white_winner = mean(winner)) %>% 
+  filter(n > 100) %>% 
+  arrange(mean_white_winner) %>% 
+  filter(players_white_user_title == "None" | players_black_user_title == "None")
+
+players_titles_connections$combined_titles <- paste(players_titles_connections$players_white_user_title, 
+                                                    players_titles_connections$players_black_user_title,
+                                                    sep = "-")
+
+players_titles_connections %>% 
+  ggplot(aes(y = fct_reorder(combined_titles, mean_white_winner),
+             x = mean_white_winner,
+             fill = fct_reorder(combined_titles, mean_white_winner))) +
+  geom_bar(stat = "identity") +
+  theme(legend.position = "none")
+
+
+players_titles_connections %>% 
+  ggplot(aes(x = players_white_user_title, players_black_user_title, fill = mean_white_winner)) +
+  geom_tile()
+
+```
+
+
+Jakie są najczęstsze połączenia między tytułami?
+```{r}
+links <- data %>% 
+  filter(speed == "bullet") %>% 
+  group_by(players_white_user_title, players_black_user_title) %>% 
+  summarise(n = n()) %>% 
+  filter(n > 50)
+
+links <- as.data.frame(links)
+links$players_black_user_title <- paste(links$players_black_user_title, " ", sep="")
+
+nodes <- data.frame(name=c(as.character(links$players_white_user_title), as.character(links$players_black_user_title)) %>% unique())
+
+links$IDsource <- match(links$players_white_user_title, nodes$name)-1 
+links$IDtarget <- match(links$players_black_user_title, nodes$name)-1
+
+ColourScal  <- 'd3.scaleOrdinal() .range(["#FDE725FF","#B4DE2CFF","#6DCD59FF","#35B779FF","#1F9E89FF","#26828EFF","#31688EFF","#3E4A89FF","#482878FF","#440154FF"])'
+
+
+p <- sankeyNetwork(Links = links, Nodes = nodes,
+                     Source = "IDsource", Target = "IDtarget",
+                     Value = "n", NodeID = "name", 
+                     sinksRight=FALSE, colourScale=ColourScal, nodeWidth=40, fontSize=13, nodePadding=20)
+
+p
+```
+Widać wyraźnie dominację meczy między graczami bez tytułów
+
+
+
+Jak ma się czas trwania partii do jej rezultatu?
+```{r}
+data %>% 
+  mutate(duration = duration_in_miliseconds / 1000) %>% 
+  group_by(winner) %>% 
+  summarise(mean_duration =  mean(duration)) %>% 
+  ggplot(aes(x = fct_infreq(winner, mean_duration), y = mean_duration, fill = winner)) +
+  geom_bar(stat = "identity")
+
+
+important_statuses <- data %>% 
+  count(status) %>%  filter(n > 1000)
+
+
+data %>% 
+  filter(status %in% important_statuses$status) %>% 
+  ggplot(aes(x = winner, fill = status)) +
+  geom_bar()
+```
+Oczywiście, dla remisów czas ten będzie dużo dłuższy, ponieważ do remisó dochodzi przy przekroczeniu czasu przez jednego gracza, po długiej końcówce, 
+
+
+Czy partie mistrzów trwają dłużej?
+```{r}
+
+players_titles_top_10 <- data %>% 
+  mutate(duration = duration_in_miliseconds / 1000) %>% 
+  filter(speed == "bullet") %>% 
+  group_by(players_white_user_title, players_black_user_title) %>% 
+  summarise(n = n(),
+            mean_duration = mean(duration)) %>% 
+  arrange(desc(n)) %>% 
+  head(n = 10)
+
+
+players_titles_top_10$combined_titles <-  paste(players_titles_top_10$players_white_user_title, 
+                                                    players_titles_top_10$players_black_user_title,
+                                                    sep = "-")
+
+players_titles_top_10 %>% 
+  ggplot(aes(x = fct_infreq(combined_titles, mean_duration),
+             y = mean_duration,
+             fill = fct_infreq(combined_titles, mean_duration))) +
+  geom_bar(stat = "identity") +
+  theme(legend.position = "none")
+```
+
+
+
+Czas trwania partii a jej wynik?
+```{r}
+data %>% 
+  mutate(duration = duration_in_miliseconds / 1000) %>% 
+  filter(speed == "blitz") %>% 
+  ggplot(aes(x = winner, y = duration, fill = winner)) +
+  geom_boxplot()
+```
+
+
+Jak się ma ranking gracza do jego tytułu
+```{r}
+data %>% 
+  filter(players_white_user_title %in% players_con$players_white_user_title & speed == "bullet") %>% 
+  ggplot(aes(x = players_white_user_title, y = players_white_rating, fill = players_white_user_title)) +
+  geom_boxplot()
+```
+
+
+Czy gry między graczami z dużą różnicą rankingu są sporo krótsze?
+```{r}
+data %>% 
+  filter(speed == "bullet") %>% 
+  mutate(duration = duration_in_miliseconds / 1000,
+         ranking_diff = abs(players_white_rating - players_black_rating),
+         combined_titles = paste(players_white_user_title, 
+                                 players_black_user_title,
+                                                    sep = "-")) %>% 
+  filter(combined_titles %in% players_titles_top_10$combined_titles) %>% 
+  ggplot(aes(x = duration, y = ranking_diff, color = combined_titles)) +
+  geom_point()
+
+# Do poprawienia
+```
 
