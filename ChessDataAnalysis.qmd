@@ -516,3 +516,161 @@ p <- animate(p)
 p
 ```
 
+
+```{r}
+data %>% 
+  mutate(duration = duration_in_miliseconds / 1000) %>% 
+  filter(duration < 2000)
+  ggplot(aes(x = duration)) +
+  geom_freqpoly()
+
+
+data %>% 
+  mutate(duration_s = duration_in_miliseconds / 1000,
+         duration_min = ceiling(duration_in_miliseconds / 60000)) %>% 
+  filter(duration_s < 2000) %>% 
+  ggplot(aes(x = players_white_analysis_mistake,
+             y = players_white_analysis_blunder)) +
+  geom_point() +
+  labs(title = "Time : {frame_time}") +
+  transition_time(duration_min)
+```
+
+
+
+
+```{r}
+data %>% 
+  filter(status %in% c("draw", "outoftime", "resign", "mate")) %>% 
+  ggplot(aes(x = status,
+             y = players_white_analysis_mistake,
+             fill = status)) +
+  geom_boxplot()
+
+
+# Partie z outoftime maja sporo wyzsze wskazania na bledy, co moze sugerowac ze gracze pod presją czasu zaczynają popełniać wiele błędów
+```
+
+Wykres średnich wartości ACPL dla kazdego z ruchow we wszystkich partiach 
+```{r}
+evaluations <- strsplit(data$analysis_eval, ",")
+max_length <- max(sapply(evaluations, length), na.rm = TRUE)
+
+fill_na <- function(x){
+  length(x) <- max_length
+  return(x)
+}
+
+evaluations <- lapply(evaluations, fill_na)
+col_names <- paste("Move", seq_along(evaluations), sep = "")
+
+
+
+eval_df <- do.call(data.frame, evaluations)
+names(eval_df) <- col_names
+eval_df <- as.data.frame(t(eval_df))
+rownames(eval_df) <- NULL
+
+eval_df_numeric <- as.data.frame(lapply(eval_df, as.numeric))
+
+
+srednie_wartosci <- colMeans(eval_df_numeric, na.rm = TRUE)
+
+df_srednie <- data.frame(Kolumna = names(srednie_wartosci), Srednia = srednie_wartosci)
+df_srednie <- head(df_srednie, n = 300)
+
+
+df_srednie %>% 
+  mutate(Kolumna = as.numeric(str_remove(Kolumna, "V"))) %>% 
+ggplot(aes(x = Kolumna, y = Srednia)) +
+  geom_line() +
+  geom_point(size = 0.5) +
+  labs(title = "Średnie wartości dla każdej kolumny",
+       x = "Kolumny", y = "Średnia Wartość") +
+  theme_minimal()
+```
+
+
+```{r}
+data %>% 
+  mutate(opening_eco_group = str_sub(opening_eco, start = 1, end = 1),
+         duration = duration_in_miliseconds / 1000) %>%
+  filter(!is.na(opening_eco_group) & duration < 2000) %>% 
+  ggplot(aes(x = opening_eco_group, y = duration)) +
+  geom_boxplot()
+
+#Niekoniecznie przydatne
+```
+
+Czy niektóre otwarcia są bardziej popularne u poszczególnych typów graczy (tytuł gracza)?
+```{r}
+data %>% 
+  mutate(opening_eco_group = str_sub(opening_eco, start = 1, end = 1)) %>% 
+  filter(speed == "bullet" & !is.na(opening_eco_group)) %>% 
+  count(opening_eco, players_white_user_title) %>% 
+  arrange(desc(n))
+
+#Moze da sie wyciagnac jakies wnioski
+```
+
+
+```{r}
+first_move_count <- data %>% 
+  mutate(first_move = str_extract(moves, "^\\w+"),
+         first_move = as.factor(first_move)) %>% 
+  count(first_move) %>%
+  filter(n > 90) 
+
+data %>% 
+ mutate(first_move = str_extract(moves, "^\\w+"),
+       first_move = as.factor(first_move)) %>% 
+ filter(first_move %in% first_move_count$first_move) %>% 
+ ggplot(aes(x = first_move, fill = winner)) +
+ geom_bar(position = "fill")
+
+# Nic ciekawego, można to jeszcze przejrzec
+```
+
+
+```{r}
+data %>% 
+ mutate(number_of_moves = str_count(moves, " ") + 1) %>% 
+ ggplot(aes(x = number_of_moves)) +
+  geom_freqpoly()
+
+data %>% 
+  mutate(number_of_moves = str_count(moves, " ") + 1) %>% 
+  group_by(speed) %>% 
+  summarise(mean_moves_number = mean(number_of_moves, na.rm = TRUE)) %>% 
+  ggplot(aes(x = speed, y = mean_moves_number, fill = speed)) + 
+  geom_bar(stat = "identity") +
+  theme(legend.position = "none")
+  
+# A to ciekawe, srednia dlugosc ruchow dla bulleta jest najwyzsza, zastanowic sie jak to mozliwe
+```
+
+
+Jak się ma ranking gracza do jego tytułu?
+```{r}
+data %>% 
+  filter(speed == "bullet") %>% 
+  ggplot(aes(x = players_white_user_title, y = players_white_rating)) +
+  geom_boxplot()
+  
+# Można jeszcze popracować nad tym
+```
+
+
+```{r}
+data %>% 
+  filter(speed == "bullet") %>% 
+  filter(players_white_user_title %in% c("GM", "IM", "FM", "None")) %>% 
+  ggplot(aes(x = players_white_user_title, y = players_white_analysis_mistake)) +
+  geom_boxplot()
+
+#Przepatrzec reszte moze da sie cos powiedziec na temat FM-ow
+```
+
+
+
+
