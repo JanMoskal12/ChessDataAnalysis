@@ -376,7 +376,6 @@ players_titles_top_10 %>%
 ```
 
 
-
 Czas trwania partii a jej wynik?
 ```{r}
 data %>% 
@@ -410,5 +409,110 @@ data %>%
   geom_point()
 
 # Do poprawienia
+```
+
+
+Czy ACPL różni się między różnymi statusami gry?
+```{r, include=FALSE, warning=FALSE, message=FALSE}
+data %>% 
+  filter(speed == "classical") %>% 
+  filter(!(status %in% c("noStart", "cheat"))) %>% 
+  ggplot(aes(x = fct_reorder(status, -players_white_analysis_acpl),
+             y = players_white_analysis_acpl,
+             fill = fct_reorder(status, -players_white_analysis_acpl))) +
+  geom_boxplot() +
+  theme(legend.position = "none")
+
+# Nic ciekawego
+```
+
+
+Jak mają się rodzaje otwarć do formatu czasowego, to znaczy jakie otwarcia spotkamy częściej dla danego formatu czasowego?
+```{r}
+data %>% 
+  mutate(opening_eco_group = str_sub(opening_eco, start = 1, end = 1)) %>%
+  filter(!is.na(opening_eco_group)) %>% 
+  ggplot(aes(x = opening_eco_group, fill = speed)) +
+  geom_bar(position = "fill")
+
+print(data %>% 
+  mutate(opening_eco_group = str_sub(opening_eco, start = 1, end = 1)) %>%
+  filter(!is.na(opening_eco_group)) %>% 
+  group_by(opening_eco_group, speed) %>% 
+  count(sort = TRUE), n = 30)
+```
+
+Jak różnią się  ilości błędów i ich rodzaje w zależności od formatu czasowego?
+```{r}
+w_players_a <- data %>%
+  select(speed,
+         players_white_user_name,
+         players_white_analysis_inaccuracy,
+         players_white_analysis_mistake, 
+         players_white_analysis_blunder) %>%
+  rename(
+         player = players_white_user_name, 
+         players_inaccuracies = players_white_analysis_inaccuracy,
+         players_mistakes = players_white_analysis_mistake,
+         players_blunders = players_white_analysis_blunder,
+         )
+
+b_players_a <- data %>%
+  select(speed,
+         players_black_user_name,
+         players_black_analysis_inaccuracy,
+         players_black_analysis_mistake, 
+         players_black_analysis_blunder) %>%
+  rename(player = players_black_user_name, 
+         players_inaccuracies = players_black_analysis_inaccuracy,
+         players_mistakes = players_black_analysis_mistake,
+         players_blunders = players_black_analysis_blunder,
+         )
+
+players_a <- rbind(w_players_a, b_players_a)
+
+players_mistakes_animation <- players_a %>% 
+  select(speed,
+         players_inaccuracies,
+         players_mistakes,
+         players_blunders)
+
+data_long <- gather(players_mistakes_animation, key = "error_type", value = "error_count", -speed)
+
+
+data_long$error_type <- factor(
+  data_long$error_type,
+  levels = c(
+             "players_inaccuracies",
+             "players_mistakes",
+             "players_blunders"
+  )
+                        )
+
+data_long <- data_long %>% 
+  group_by(speed, error_type) %>% 
+  summarise(mean_a = mean(error_count, na.rm = TRUE))
+
+
+legend_labels <- c(
+  "players_inaccuracies" = " Liczba nieścisłości (Inaccuracy)",
+  "players_mistakes" = "Liczba błędów (Mistake)",
+  "players_blunders" = "Liczba poważnych błędów (Blunder)"
+)
+
+
+p <- ggplot(data_long, aes(x = error_type, y = mean_a, fill = error_type)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(title = 'Speed: {closest_state}') +
+  scale_x_discrete(name = NULL, labels = NULL) +
+  scale_y_continuous(name = "Średnia liczba błędów gracza w grze") +
+  transition_states(states = speed, transition_length = 2, state_length = 1) +
+  ease_aes('linear') +
+  scale_fill_manual(values = c("red", "blue", "green"), name = "Rodzaj błędu", labels = legend_labels) + 
+  theme(legend.position = "top") +
+  theme_minimal() 
+
+p <- animate(p)
+p
 ```
 
