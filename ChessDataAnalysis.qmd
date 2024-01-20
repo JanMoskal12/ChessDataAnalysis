@@ -10,31 +10,18 @@ library(tidyverse)
 library(networkD3)
 library(plotly)
 library(gganimate)
+library(plotly)
+library(kableExtra)
+library(knitr)
 ```
 
 ```{r, include=FALSE}
 data <- readRDS("cleaned_data.rds")
 
 
-View(data)
+zView(data)
 glimpse(data)
 ```
-
-### Variant:
-
-Przyglądam się tutaj, niewielkiej liczbie gier, które rozpoczynają się z pewnej ustalonej przez graczy pozycji
-
-```{r}
-data %>% 
-  count(variant)
-
-data %>% 
-  filter(variant == "fromPosition") %>% 
-  count(players_white_user_name, sort = TRUE) %>% 
-  head(n = 1) %>%  select(players_white_user_name)
-```
-
-Nie ma tutaj jednak nic ciekawego, za sporą liczbę meczy (9/27) odpowiada jeden gracz 'Monkey King'
 
 ### Speed:
 
@@ -55,7 +42,7 @@ data %>%
   
 ```
 
-Jak widać wraz z większą ilością czasu gry rośnie liczba remisów. Jest to jaknajbardziej logiczne, gracze mają więcej czasu na analizę, planowanie i liczenie wariantów, po obu stronach popełniają mniej poważnych błędów przez co partia jest bardziej wyrównana. Widać również, że wygrane graczy z białymi i czarnymi figurami są na podobnym poziomie, to zjawisko wynika z charakterystyki analizowanego zestawu danych. Mamy tutaj do czynienia z najlepszymi graczami w konkretnych formatach czasowych na Lichess. Silniejsi i bardziej doświadczeni gracze są w stanie efektywnie korzytsać z obu stron planszy, co prowadzi do równomiernej dystrybucji zwycięstw.
+Jak widać wraz z większą ilością czasu gry rośnie liczba remisów. Jest to jak najbardziej logiczne, gracze mają więcej czasu na analizę, planowanie i liczenie wariantów, po obu stronach popełniają mniej poważnych błędów przez co partia jest bardziej wyrównana. Widać również, że wygrane graczy z białymi i czarnymi figurami są na podobnym poziomie, to zjawisko wynika z charakterystyki analizowanego zestawu danych. Mamy tutaj do czynienia z najlepszymi graczami w konkretnych formatach czasowych na Lichess. Silniejsi i bardziej doświadczeni gracze są w stanie efektywnie korzytsać z obu stron planszy, co prowadzi do równomiernej dystrybucji zwycięstw.
 
 Dla kontrastu dane dotyczące przeciętnych graczy Lichessa:
 
@@ -64,22 +51,42 @@ Sprawdzam czy któreś otwarcia pojawiają się częściej w poszczególnych for
 ```{r}
 data %>% group_by(opening_name) %>% count(sort = TRUE) #defensywne, w top 10 tylko dwa otwarcia 1.e4 tylko dwa mecze na 20000 z King's Knight Opening
 
-ubu_opening <- data %>% filter(speed == "ultraBullet") %>% 
-  group_by(opening_name) %>%  count(sort = TRUE)  # defensywne i elastyczne, "krótkie" ruchy bardzo popularne
+ubu <- data %>% filter(speed == "ultraBullet") %>% 
+  group_by(opening_name) %>%  count(sort = TRUE) %>% 
+  head(n = 10)# defensywne i elastyczne, "krótkie" ruchy bardzo popularne
 
-bu_opening <- data %>% filter(speed == "bullet") %>% 
-  group_by(opening_name) %>%  count(sort = TRUE) #elastyczne trochę więcej ruchów z 1.e4, dużo większa liczba unikalnych otwarć
+bu <- data %>% filter(speed == "bullet") %>% 
+  group_by(opening_name) %>%  count(sort = TRUE) %>% 
+  head(n = 10)#elastyczne trochę więcej ruchów z 1.e4, dużo większa liczba unikalnych otwarć
 
-bl_opening <- data %>% filter(speed == "blitz") %>% 
-  group_by(opening_name) %>%  count(sort = TRUE) # mniej defensywnie, obrona sycylisjka (więcej 1.e4)
+bl <- data %>% filter(speed == "blitz") %>% 
+  group_by(opening_name) %>%  count(sort = TRUE) %>% 
+  head(n = 10)# mniej defensywnie, obrona sycylisjka (więcej 1.e4)
 
-ra_opening <- data %>% filter(speed == "rapid") %>% 
-  group_by(opening_name) %>%  count(sort = TRUE) # solidne, bardziej agresywne otwarcia sporo 1.e4 caro-kann
+ra <- data %>%
+  filter(!is.na(opening_name)) %>% 
+  filter(speed == "rapid") %>% 
+  group_by(opening_name) %>%  count(sort = TRUE) %>% 
+  head(n = 10) # solidne, bardziej agresywne otwarcia sporo 1.e4 caro-kann
 
-cl_opening <- data %>% filter(speed == "classical") %>% 
-  group_by(opening_name) %>%  count(sort = TRUE) # solidne, więcej 1.e4
+cl <- data %>% filter(speed == "classical") %>% 
+  group_by(opening_name) %>%  count(sort = TRUE) %>% 
+  head(n = 10)# solidne, więcej 1.e4
+
 
 print(c(nrow(ubu_opening), nrow(bu_opening), nrow(bl_opening), nrow(ra_opening), nrow(cl_opening)))
+tables_list <- list(ubu$opening_name, bu$opening_name, bl$opening_name, ra$opening_name, cl$opening_name)
+
+count_values <- function(tables_list) {
+  all_values <- unlist(tables_list)
+  value_counts <- table(all_values)
+  return(data.frame(value = names(value_counts), count = as.numeric(value_counts)))
+}
+
+
+result <- count_values(tables_list)
+result %>% arrange(desc(count))
+
 ```
 
 Liczba unikalnych otwarć wzrasta wraz z długością gry. W skrócie, w miarę wydłużania się czasu na partię, gracze są bardziej skłonni eksperymentować z różnymi otwarciami, a strategie stają się bardziej zróżnicowane. W szybszych formatach często dominują ruchy elastyczne, a w dłuższych partach pojawiają się bardziej solidne i strategiczne otwarcia.
@@ -115,7 +122,7 @@ players_titles %>%
   geom_bar(position = "fill")
 ```
 
-Taki rozkład graczy tytulowanych dla każdego formatu czasowego jest z pewnością związany z umiejętnościami i doświadczeniem graczy.Silni gracze mogą być bardziej skłonni do wybierania szybszych partii, podczas gdy gracze bez tytułów mogą preferować dłuższe partie, gdzie mają więcej czasu na analizę i naukę. To zjawisko może wpływać na obserwowaną dystrybucję tytułów w różnych formatach czasowych. Te dwa wykresy ukazują wiele rzeczy, część może wydawać się nieintuicyjna np. w drugim wykresie stosunek graczy bez tytułu do wszystkich graczy spada wraz ze spadkiem długości meczu, jednak nie dla ultraBulleta, dlaczego Moje hipoteza to możliwość unikania ultraBulleta przez graczy tytułowanych, ponieważ preferują bardziej zaawansowane i strategiczne gry, gdzie ich umiejętności są lepiej wykorzystywane. UltraBullet, charakteryzujący się szybkimi ruchami i chaotyczną rozgrywką, przyciąga różnorodne grupy graczy, a dominacja graczy bez tytułów może wynikać z bardziej rekreacyjnego podejścia do tej formy rozgrywki. Na wykresie pierwszym w oczy rzuca się jeszcze jedna rzecz to znaczy: im krótszy format czasowy tym mniejsza różnorodność graczy. To może mieć powiązanie z tym co piałem wcześniej, wielu graczy nietytułowanych próbuje swoich sił w szachach klasycznych, dlatego jest ich tak dużo, za to w szachach szybkich i blyskawicznych rządzą mocni gracze tytułowani i nie ma aż tak dużo graczy nietytułowanych (wciąż bardzo dużo)
+Taki rozkład graczy tytulowanych dla każdego formatu czasowego jest z pewnością związany z umiejętnościami i doświadczeniem graczy. Silni gracze mogą być bardziej skłonni do wybierania szybszych partii, podczas gdy gracze bez tytułów mogą preferować dłuższe partie, gdzie mają więcej czasu na analizę i naukę. To zjawisko może wpływać na obserwowaną dystrybucję tytułów w różnych formatach czasowych. Te dwa wykresy ukazują wiele rzeczy, część może wydawać się nieintuicyjna np. w drugim wykresie stosunek graczy bez tytułu do wszystkich graczy spada wraz ze spadkiem długości meczu, jednak nie dla ultraBulleta, dlaczego Moje hipoteza to możliwość unikania ultraBulleta przez graczy tytułowanych, ponieważ preferują bardziej zaawansowane i strategiczne gry, gdzie ich umiejętności są lepiej wykorzystywane. UltraBullet, charakteryzujący się szybkimi ruchami i chaotyczną rozgrywką, przyciąga różnorodne grupy graczy, a dominacja graczy bez tytułów może wynikać z bardziej rekreacyjnego podejścia do tej formy rozgrywki. Na wykresie pierwszym w oczy rzuca się jeszcze jedna rzecz to znaczy: im krótszy format czasowy tym mniejsza różnorodność graczy. To może mieć powiązanie z tym co piałem wcześniej, wielu graczy nietytułowanych próbuje swoich sił w szachach klasycznych, dlatego jest ich tak dużo, za to w szachach szybkich i blyskawicznych rządzą mocni gracze tytułowani i nie ma aż tak dużo graczy nietytułowanych (wciąż bardzo dużo)
 
 Jak powiązany jest ranking graczy z ich tytułąmi?
 
@@ -297,8 +304,8 @@ players_titles_connections %>%
 
 ```
 
-
 Jakie są najczęstsze połączenia między tytułami?
+
 ```{r}
 links <- data %>% 
   filter(speed == "bullet") %>% 
@@ -324,11 +331,11 @@ p <- sankeyNetwork(Links = links, Nodes = nodes,
 
 p
 ```
+
 Widać wyraźnie dominację meczy między graczami bez tytułów
 
-
-
 Jak ma się czas trwania partii do jej rezultatu?
+
 ```{r}
 data %>% 
   mutate(duration = duration_in_miliseconds / 1000) %>% 
@@ -347,10 +354,11 @@ data %>%
   ggplot(aes(x = winner, fill = status)) +
   geom_bar()
 ```
-Oczywiście, dla remisów czas ten będzie dużo dłuższy, ponieważ do remisó dochodzi przy przekroczeniu czasu przez jednego gracza, po długiej końcówce, 
 
+Oczywiście, dla remisów czas ten będzie dużo dłuższy, ponieważ do remisó dochodzi przy przekroczeniu czasu przez jednego gracza, po długiej końcówce,
 
 Czy partie mistrzów trwają dłużej?
+
 ```{r}
 
 players_titles_top_10 <- data %>% 
@@ -375,8 +383,8 @@ players_titles_top_10 %>%
   theme(legend.position = "none")
 ```
 
-
 Czas trwania partii a jej wynik?
+
 ```{r}
 data %>% 
   mutate(duration = duration_in_miliseconds / 1000) %>% 
@@ -385,8 +393,8 @@ data %>%
   geom_boxplot()
 ```
 
-
 Jak się ma ranking gracza do jego tytułu
+
 ```{r}
 data %>% 
   filter(players_white_user_title %in% players_con$players_white_user_title & speed == "bullet") %>% 
@@ -394,8 +402,8 @@ data %>%
   geom_boxplot()
 ```
 
-
 Czy gry między graczami z dużą różnicą rankingu są sporo krótsze?
+
 ```{r}
 data %>% 
   filter(speed == "bullet") %>% 
@@ -411,8 +419,8 @@ data %>%
 # Do poprawienia
 ```
 
-
 Czy ACPL różni się między różnymi statusami gry?
+
 ```{r, include=FALSE, warning=FALSE, message=FALSE}
 data %>% 
   filter(speed == "classical") %>% 
@@ -426,8 +434,8 @@ data %>%
 # Nic ciekawego
 ```
 
-
 Jak mają się rodzaje otwarć do formatu czasowego, to znaczy jakie otwarcia spotkamy częściej dla danego formatu czasowego?
+
 ```{r}
 data %>% 
   mutate(opening_eco_group = str_sub(opening_eco, start = 1, end = 1)) %>%
@@ -442,7 +450,8 @@ print(data %>%
   count(sort = TRUE), n = 30)
 ```
 
-Jak różnią się  ilości błędów i ich rodzaje w zależności od formatu czasowego?
+Jak różnią się ilości błędów i ich rodzaje w zależności od formatu czasowego?
+
 ```{r}
 w_players_a <- data %>%
   select(speed,
@@ -516,7 +525,6 @@ p <- animate(p)
 p
 ```
 
-
 ```{r}
 data %>% 
   mutate(duration = duration_in_miliseconds / 1000) %>% 
@@ -536,9 +544,6 @@ data %>%
   transition_time(duration_min)
 ```
 
-
-
-
 ```{r}
 data %>% 
   filter(status %in% c("draw", "outoftime", "resign", "mate")) %>% 
@@ -551,7 +556,8 @@ data %>%
 # Partie z outoftime maja sporo wyzsze wskazania na bledy, co moze sugerowac ze gracze pod presją czasu zaczynają popełniać wiele błędów
 ```
 
-Wykres średnich wartości ACPL dla kazdego z ruchow we wszystkich partiach 
+Wykres średnich wartości ACPL dla kazdego z ruchow we wszystkich partiach
+
 ```{r}
 evaluations <- strsplit(data$analysis_eval, ",")
 max_length <- max(sapply(evaluations, length), na.rm = TRUE)
@@ -590,7 +596,6 @@ ggplot(aes(x = Kolumna, y = Srednia)) +
   theme_minimal()
 ```
 
-
 ```{r}
 data %>% 
   mutate(opening_eco_group = str_sub(opening_eco, start = 1, end = 1),
@@ -603,6 +608,7 @@ data %>%
 ```
 
 Czy niektóre otwarcia są bardziej popularne u poszczególnych typów graczy (tytuł gracza)?
+
 ```{r}
 data %>% 
   mutate(opening_eco_group = str_sub(opening_eco, start = 1, end = 1)) %>% 
@@ -612,7 +618,6 @@ data %>%
 
 #Moze da sie wyciagnac jakies wnioski
 ```
-
 
 ```{r}
 first_move_count <- data %>% 
@@ -631,7 +636,6 @@ data %>%
 # Nic ciekawego, można to jeszcze przejrzec
 ```
 
-
 ```{r}
 data %>% 
  mutate(number_of_moves = str_count(moves, " ") + 1) %>% 
@@ -649,8 +653,8 @@ data %>%
 # A to ciekawe, srednia dlugosc ruchow dla bulleta jest najwyzsza, zastanowic sie jak to mozliwe
 ```
 
-
 Jak się ma ranking gracza do jego tytułu?
+
 ```{r}
 data %>% 
   filter(speed == "bullet") %>% 
@@ -659,7 +663,6 @@ data %>%
   
 # Można jeszcze popracować nad tym
 ```
-
 
 ```{r}
 data %>% 
@@ -670,7 +673,3 @@ data %>%
 
 #Przepatrzec reszte moze da sie cos powiedziec na temat FM-ow
 ```
-
-
-
-

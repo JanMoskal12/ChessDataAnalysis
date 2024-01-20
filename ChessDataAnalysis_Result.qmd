@@ -1,0 +1,47 @@
+---
+title: "ChessDataAnalysis-Result"
+author: "Jan Moskal"
+format: html
+editor: visual
+theme
+---
+
+# Wstęp
+
+
+
+
+
+# Analiza
+```{r, include=FALSE, message=FALSE, warning=FALSE}
+#| label: Loading libraries and data
+library(tidyverse)
+library(networkD3)
+library(plotly)
+library(gganimate)
+library(plotly)
+library(kableExtra)
+library(knitr)
+
+data <- readRDS("cleaned_data.rds")
+```
+
+
+Przyglądam się tutaj, jak dzielą się wygrane i przegrane dla formatów czasowych
+```{r, echo=FALSE}
+
+data %>%  
+  ggplot(aes(x = factor(speed, levels = c("ultraBullet", "bullet", "blitz", "rapid","classical")), fill = winner)) +
+  geom_bar(position = "fill") +
+  labs(x = NULL, y = "Stosunek wygranych,przegranych i zremisowanych meczy", fill = "Zwycięzca", 
+       title = "Dystrybucja zwycięstw dla poszczególnych formatów czasowych") +
+  scale_fill_manual(values = c("black" ="black", "draw" = "darkgrey", "white" = "white")) +
+  theme(panel.background = element_rect(fill = "lightgrey"),
+        legend.background = element_rect(fill = "lightblue"),
+        plot.background = element_rect(fill = "lightgrey"),
+        plot.title = element_text(face = "bold",
+                                  size = 15,
+                                  hjust = 0.5)) 
+```
+
+Jak widać wraz z większą ilością czasu gry rośnie liczba remisów. Jest to jak najbardziej logiczne, gracze mają więcej czasu na analizę, planowanie i liczenie wariantów, po obu stronach popełniają mniej poważnych błędów przez co partia jest bardziej wyrównana. Widać również, że wygrane graczy z białymi i czarnymi figurami są na podobnym poziomie, to zjawisko wynika z charakterystyki analizowanego zestawu danych. Mamy tutaj do czynienia z najlepszymi graczami w konkretnych formatach czasowych na Lichess. Silniejsi i bardziej doświadczeni gracze są w stanie efektywnie korzytsać z obu stron planszy, co prowadzi do równomiernej dystrybucji zwycięstw.
