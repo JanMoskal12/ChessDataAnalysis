@@ -3,18 +3,13 @@ title: "ChessDataAnalysis-Result"
 author: "Jan Moskal"
 format: html
 editor: visual
-theme
 ---
 
 # Wstęp
 
-
-
-
-
 # Analiza
+
 ```{r, include=FALSE, message=FALSE, warning=FALSE}
-#| label: Loading libraries and data
 library(tidyverse)
 library(networkD3)
 library(plotly)
@@ -22,26 +17,158 @@ library(gganimate)
 library(plotly)
 library(kableExtra)
 library(knitr)
+library(treemap)
+library(ggridges)
+library(ggcorrplot)
 
 data <- readRDS("cleaned_data.rds")
 ```
 
-
 Przyglądam się tutaj, jak dzielą się wygrane i przegrane dla formatów czasowych
-```{r, echo=FALSE}
 
-data %>%  
-  ggplot(aes(x = factor(speed, levels = c("ultraBullet", "bullet", "blitz", "rapid","classical")), fill = winner)) +
-  geom_bar(position = "fill") +
-  labs(x = NULL, y = "Stosunek wygranych,przegranych i zremisowanych meczy", fill = "Zwycięzca", 
-       title = "Dystrybucja zwycięstw dla poszczególnych formatów czasowych") +
-  scale_fill_manual(values = c("black" ="black", "draw" = "darkgrey", "white" = "white")) +
-  theme(panel.background = element_rect(fill = "lightgrey"),
-        legend.background = element_rect(fill = "lightblue"),
-        plot.background = element_rect(fill = "lightgrey"),
-        plot.title = element_text(face = "bold",
-                                  size = 15,
-                                  hjust = 0.5)) 
-```
+![](ditribution_of_wins_for_each_speed.png){fig-align="center"}
 
 Jak widać wraz z większą ilością czasu gry rośnie liczba remisów. Jest to jak najbardziej logiczne, gracze mają więcej czasu na analizę, planowanie i liczenie wariantów, po obu stronach popełniają mniej poważnych błędów przez co partia jest bardziej wyrównana. Widać również, że wygrane graczy z białymi i czarnymi figurami są na podobnym poziomie, to zjawisko wynika z charakterystyki analizowanego zestawu danych. Mamy tutaj do czynienia z najlepszymi graczami w konkretnych formatach czasowych na Lichess. Silniejsi i bardziej doświadczeni gracze są w stanie efektywnie korzytsać z obu stron planszy, co prowadzi do równomiernej dystrybucji zwycięstw.
+
+Sprawdzam czy któreś otwarcia pojawiają się częściej w poszczególnych formatach czasowych.
+
+```{=html}
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      display: flex;
+      flex-wrap: wrap; 
+      justify-content: space-around;
+      margin: 0;
+      padding: 0;
+      font-weight: bold;
+      color: ;
+    }
+    iframe {
+      display: block;
+      box-sizing: border-box;
+      margin-bottom: 20px; 
+    }
+    .table-container {
+      width: 100%; 
+    }
+     
+  </style>
+</head>
+<body>
+
+<div class="table-container">
+  <iframe src="ubu_table.html" width="48%" height="550px" frameborder="0" align="left"></iframe>
+  <iframe src="bu_table.html" width="48%" height="550px" frameborder="0" align="right"></iframe>
+
+</div>
+
+<div class="table-container">
+  <iframe src="bl_table.html" width="48%" height="550px" frameborder="0" align="left"></iframe>
+  <iframe src="ra_table.html" width="48%" height="550px" frameborder="0" align="right"></iframe>
+  
+</div>
+
+<div class="table-container">
+  <iframe src="cl_table.html" width="65%" height="500px" frameborder="0" align="left"></iframe>
+  <iframe src="n_openings_table.html" width="30%" height="500px" frameborder="0" align="right"></iframe>
+</div>
+
+</body>
+</html>
+```
+Liczba unikalnych otwarć wzrasta wraz z długością gry. W skrócie, w miarę wydłużania się czasu na partię, gracze są bardziej skłonni eksperymentować z różnymi otwarciami, a strategie stają się bardziej zróżnicowane. W szybszych formatach często dominują ruchy elastyczne, a w dłuższych partach pojawiają się bardziej solidne i strategiczne otwarcia.
+
+Jak wygląda rozkład procentowy tytułów graczy w zależności od formatu czasowego?
+
+![](percentage_of_titles_by_time_format.png)
+
+Taki rozkład graczy tytulowanych dla każdego formatu czasowego jest z pewnością związany z umiejętnościami i doświadczeniem graczy. Silni gracze mogą być bardziej skłonni do wybierania szybszych partii, podczas gdy gracze bez tytułów mogą preferować dłuższe partie, gdzie mają więcej czasu na analizę i naukę. To zjawisko może wpływać na obserwowaną dystrybucję tytułów w różnych formatach czasowych. Wykres ten ukazuje wiele rzeczy, część może wydawać się nieintuicyjna np. stosunek graczy bez tytułu do wszystkich graczy spada wraz ze spadkiem długości meczu, jednak nie dla ultraBulleta, dlaczego? Moje hipoteza to możliwość unikania ultraBulleta przez graczy tytułowanych, ponieważ preferują bardziej zaawansowane i strategiczne gry, gdzie ich umiejętności są lepiej wykorzystywane. UltraBullet, charakteryzujący się szybkimi ruchami i chaotyczną rozgrywką, przyciąga różnorodne grupy graczy, a dominacja graczy bez tytułów może wynikać z bardziej rekreacyjnego podejścia do tej formy rozgrywki.
+
+Jak powiązany jest ranking graczy z ich tytułami dla konkretnych formatów szachowych?
+
+![](rating_VS_title_for_each_speed.png){fig-align="center"}
+
+Nie ma tutaj nic zaskakującego gracze, gracze z najwyższymi tytułami mają najwyższe rankingi
+
+Czy istnieje związek między rankiem graczy a formatem czasowym?
+
+![](rating_VS_speed.png){fig-align="center"}
+
+Tutaj widać, to o czym wcześniej mówiłem to znaczy gracze bez tytułów, wybierają chętniej partie z wiekszą ilością czasu, za to gracze z tytułami te krótsze formaty. Tutaj po rankingach można zobaczyć to samo.
+
+Jak będzię wyglądał rozkład wartości poszczególnych statusów dla różnych formatów czasowych?
+
+```{r, echo=FALSE}
+tree_data <- data %>% 
+  filter(!(status %in% c("cheat", "noStart", "stalemate", "timeout"))) %>% 
+  group_by(speed, status) %>% 
+  count() %>% 
+  filter(n > 200)
+
+treemap(tree_data,
+        index = c("speed", "status"),
+        vSize = "n", type="index",
+        fontsize.labels=c(15,12),                
+        fontcolor.labels=c("white","orange"),    
+        fontface.labels=c(2,1),                  
+        bg.labels=c("transparent"),              
+        align.labels=list(
+          c("center", "center"), 
+          c("right", "bottom")
+        ),                                  
+        overlap.labels=0.5,                     
+        inflate.labels=F,                        
+        title = "Rozkład wartości poszczególnych statusów dla różnych formatów czasowych"
+)
+```
+
+Tak jak można było się spodziewać więcej przegranych na czas będzie dla krótkich partii, za to więcej poddań i remisów dla tych dłuższych.
+
+Jak ACPL różni się między konkretnymi formatami czasowymi?
+
+![](acpl_for_each_speed.png){fig-align="center"}
+
+Tak jak można było się spodziewać, w grach z większym ograniczniem czasowym gracze popełniają więcej poważnych błędów.
+
+Jakie są najczęstsze połączenia między tytułami w grach?
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+links <- data %>% 
+  group_by(players_white_user_title, players_black_user_title) %>% 
+  summarise(n = n()) %>% 
+  filter(n > 50)
+
+links <- as.data.frame(links)
+links$players_black_user_title <- paste(links$players_black_user_title, " ", sep="")
+
+nodes <- data.frame(name=c(as.character(links$players_white_user_title), as.character(links$players_black_user_title)) %>% unique())
+
+links$IDsource <- match(links$players_white_user_title, nodes$name)-1 
+links$IDtarget <- match(links$players_black_user_title, nodes$name)-1
+
+ColourScal  <- 'd3.scaleOrdinal() .range(["#FDE725FF","#B4DE2CFF","#6DCD59FF","#35B779FF","#1F9E89FF","#26828EFF","#31688EFF","#3E4A89FF","#482878FF","#440154FF"])'
+
+
+sankeyNetwork(Links = links, Nodes = nodes,
+              Source = "IDsource", Target = "IDtarget",
+              Value = "n", NodeID = "name", 
+              sinksRight=FALSE, colourScale=ColourScal, nodeWidth=40, fontSize=13, nodePadding=20)
+```
+
+Widać wyraźnie dominację meczy między graczami bez tytułów.
+
+Jak różnią się ilości błędów i ich rodzaje w zależności od formatu czasowego?
+
+![](number_of_mistakes_for_each_speed.gif){fig-align="center"}
+
+Jak widać średnia liczba błędów rośnie wraz z długością gry.
+
+Jakie są wyniki pomiędzy graczami określonych tytułów?
+
+![](avg_results_for_titles_comp.png){fig-align="center"}
+
+Gracze z dużą różnicą tytułów mają wysokie przewagi.
