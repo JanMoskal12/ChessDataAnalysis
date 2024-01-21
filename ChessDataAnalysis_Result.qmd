@@ -28,7 +28,9 @@ Przyglądam się tutaj, jak dzielą się wygrane i przegrane dla formatów czaso
 
 ![](ditribution_of_wins_for_each_speed.png){fig-align="center"}
 
-Jak widać wraz z większą ilością czasu gry rośnie liczba remisów. Jest to jak najbardziej logiczne, gracze mają więcej czasu na analizę, planowanie i liczenie wariantów, po obu stronach popełniają mniej poważnych błędów przez co partia jest bardziej wyrównana. Widać również, że wygrane graczy z białymi i czarnymi figurami są na podobnym poziomie, to zjawisko wynika z charakterystyki analizowanego zestawu danych. Mamy tutaj do czynienia z najlepszymi graczami w konkretnych formatach czasowych na Lichess. Silniejsi i bardziej doświadczeni gracze są w stanie efektywnie korzytsać z obu stron planszy, co prowadzi do równomiernej dystrybucji zwycięstw.
+Zauważalny jest trend wzrostu liczby remisów wraz z wydłużającym się czasem gry. Jest to zjawisko zrozumiałe, gdyż gracze, dysponując większym czasem, mają możliwość głębszej analizy, planowania oraz uwzględnienia większej liczby wariantów. W rezultacie obie strony podejmują mniej poważnych błędów, co sprawia, że partie stają się bardziej wyrównane. Poza tym w krótkich meczach gracze mogą być mniej skłonni do decydowania się na remisowanie, głównie z powodu krótkiego czasu trwania partii. Dysponując krótkim czasem gry, gracze często skłaniają się ku walce o zwycięstwo, licząc na możliwość wykorzystania ewentualnych błędów przeciwnika. W tym krótkim okresie gry każdy ruch może mieć istotne znaczenie, a gracze starają się wykorzystać dynamikę partii, mając nadzieję na decydującą przewagę. Z kolei w przypadku gier o znacznie dłuższym czasie, zwłaszcza w sytuacji, gdy pozycja na planszy jest bardzo wyrównana, gracze mogą chętniej decydować się na remis, unikając przeciągania gry.
+
+Warto także zauważyć, że wygrane graczy zarówno z białymi, jak i czarnymi figurami utrzymują się na zbliżonym poziomie. To zjawisko wynika z charakterystyki analizowanego zestawu danych, który obejmuje najlepszych graczy w konkretnych formatach czasowych na platformie Lichess. Silniejsi i bardziej doświadczeni gracze potrafią skutecznie wykorzystać obie strony planszy, co przekłada się na równomierną dystrybucję zwycięstw.
 
 Sprawdzam czy któreś otwarcia pojawiają się częściej w poszczególnych formatach czasowych.
 
@@ -80,25 +82,35 @@ Sprawdzam czy któreś otwarcia pojawiają się częściej w poszczególnych for
 </body>
 </html>
 ```
-Liczba unikalnych otwarć wzrasta wraz z długością gry. W skrócie, w miarę wydłużania się czasu na partię, gracze są bardziej skłonni eksperymentować z różnymi otwarciami, a strategie stają się bardziej zróżnicowane. W szybszych formatach często dominują ruchy elastyczne, a w dłuższych partach pojawiają się bardziej solidne i strategiczne otwarcia.
+Liczba unikalnych otwarć rośnie wraz z długością trwania partii. Ogólnie rzecz biorąc, im więcej czasu jest dostępne na grę, tym większa chęć graczy do eksperymentowania z różnymi otwarciami, co prowadzi do zróżnicowania strategii. W szybszych formatach gry często przeważają elastyczne i defensywne otwarcia, podczas gdy w dłuższych partiach pojawiają się bardziej solidne i strategiczne otwarcia.
+
+Na szczycie większości tabel pojawiają się otwarcia takie jak Indian Defense i Sicilian Defense. Są to strategie, które oferują szeroki zakres możliwości taktycznych i strategicznych, co sprawia, że są popularne w grach o wyższym poziomie.
+
+Ciekawym zjawiskiem jest obserwacja, że w przypadku formatu UltraBullet występują stosunkowo rzadkie otwarcia, takie jak Mieses Opening, Van't Kruijs Opening, czy Hungarian Opening. To może wynikać z tego, że gracze w UltraBullecie na początku partii starają się utrzymać elastyczność i bezpieczeństwo, co skłania ich do wybierania otwarć o mniejszym ryzyku.
+W rezultacie, różnice w wyborze otwarć w zależności od formatu czasowego mogą świadczyć nie tylko o preferencjach graczy, ale także o strategiach, jakie przyjmują w zależności od dostępnego czasu na podjęcie decyzji w grze (dobrze widoczne dla UltraBulleta).
 
 Jak wygląda rozkład procentowy tytułów graczy w zależności od formatu czasowego?
 
 ![](percentage_of_titles_by_time_format.png)
 
-Taki rozkład graczy tytulowanych dla każdego formatu czasowego jest z pewnością związany z umiejętnościami i doświadczeniem graczy. Silni gracze mogą być bardziej skłonni do wybierania szybszych partii, podczas gdy gracze bez tytułów mogą preferować dłuższe partie, gdzie mają więcej czasu na analizę i naukę. To zjawisko może wpływać na obserwowaną dystrybucję tytułów w różnych formatach czasowych. Wykres ten ukazuje wiele rzeczy, część może wydawać się nieintuicyjna np. stosunek graczy bez tytułu do wszystkich graczy spada wraz ze spadkiem długości meczu, jednak nie dla ultraBulleta, dlaczego? Moje hipoteza to możliwość unikania ultraBulleta przez graczy tytułowanych, ponieważ preferują bardziej zaawansowane i strategiczne gry, gdzie ich umiejętności są lepiej wykorzystywane. UltraBullet, charakteryzujący się szybkimi ruchami i chaotyczną rozgrywką, przyciąga różnorodne grupy graczy, a dominacja graczy bez tytułów może wynikać z bardziej rekreacyjnego podejścia do tej formy rozgrywki.
+
+Rozkład graczy posiadających tytuły w różnych formatach czasowych jest z pewnością związany z umiejętnościami i doświadczeniem graczy. Silniejsi gracze mogą być bardziej skłonni do wybierania szybszych partii, podczas gdy gracze bez tytułów mogą preferować dłuższe gry, w których mają więcej czasu na analizę i naukę. To zjawisko wpływa na obserwowaną dystrybucję tytułów w różnych formatach czasowych.
+
+Wykres ukazuje wiele aspektów, z których niektóre mogą wydawać się nieintuicyjne, np. stosunek graczy bez tytułu do ogółu graczy maleje wraz ze spadkiem długości partii, z wyjątkiem ultraBulleta. Dlaczego? Moja hipoteza zakłada możliwość unikania ultraBulleta przez graczy posiadających tytuły, ponieważ preferują bardziej zaawansowane i strategiczne gry, w których ich umiejętności są lepiej wykorzystywane. UltraBullet, charakteryzujący się szybkimi ruchami i chaotyczną rozgrywką, przyciąga różnorodne grupy graczy, a dominacja graczy bez tytułów może wynikać z bardziej rekreacyjnego podejścia do tej formy rozgrywki.
 
 Jak powiązany jest ranking graczy z ich tytułami dla konkretnych formatów szachowych?
 
 ![](rating_VS_title_for_each_speed.png){fig-align="center"}
 
-Nie ma tutaj nic zaskakującego gracze, gracze z najwyższymi tytułami mają najwyższe rankingi
+W trybach klasycznych, gdzie gracze mają znacznie więcej czasu na każdy ruch, partie są bardziej wymagające pod względem analizy, planowania i skomplikowanych strategii. Dlatego też, aby osiągnąć wysoki ranking w szachach klasycznych, gracz musi być zdolny utrzymać wysoki poziom gry przez dłuższy czas.
+Z kolei w trybach takich jak Bullet, gdzie czas na partię jest znacznie ograniczony, zdolność do szybkiego myślenia, podejmowania szybkich decyzji i umiejętności taktycznych są bardziej kluczowe. Gracze mogą szybko zwiększać swój ranking, zdobywając zwycięstwa w krótkich partiach, co przyspiesza proces awansowania na wyższe pozycje w rankingu.
+W rezultacie osiągnięcie wysokiego rankingu w szachach klasycznych może być bardziej czasochłonne i wymagać dłuższego okresu utrzymywania wysokiego poziomu gry, podczas gdy w trybach szybszych, takich jak Bullet, gracz może szybko osiągnąć wysoki ranking, zdobywając wiele zwycięstw w krótkim czasie. Ostateczny ranking zależy jednak od umiejętności danego gracza w konkretnym trybie gry.
 
 Czy istnieje związek między rankiem graczy a formatem czasowym?
 
 ![](rating_VS_speed.png){fig-align="center"}
 
-Tutaj widać, to o czym wcześniej mówiłem to znaczy gracze bez tytułów, wybierają chętniej partie z wiekszą ilością czasu, za to gracze z tytułami te krótsze formaty. Tutaj po rankingach można zobaczyć to samo.
+Tutaj zauważalne jest wspomniane wcześniej zjawisko – gracze bez tytułów wybierają zazwyczaj partie o dłuższym czasie, podczas gdy ci z tytułami preferują krótsze formaty. Podobna tendencja widoczna jest również w kontekście rankingów. Dodatkowym aspektem, na który wcześniej zwracałem uwagę, jest to, że utrzymanie i zdobycie wysokich rankingów w dłuższych partiach może być znacznie trudniejsze.
 
 Jak będzię wyglądał rozkład wartości poszczególnych statusów dla różnych formatów czasowych?
 
@@ -125,8 +137,15 @@ treemap(tree_data,
         title = "Rozkład wartości poszczególnych statusów dla różnych formatów czasowych"
 )
 ```
+Specyfika formatów czasowych ma duży wpływ na statystyki przegranych, poddań i remisów w poszczególnych trybach gry.
 
-Tak jak można było się spodziewać więcej przegranych na czas będzie dla krótkich partii, za to więcej poddań i remisów dla tych dłuższych.
+UltraBullet i Bullet:
+
+W trybach tych, gdzie czas na całą partię wynosi jedynie kilkadziesiąt sekund, presja czasu jest niezwykle intensywna. Gracze muszą podejmować decyzje błyskawicznie, co zwiększa ryzyko popełnienia błędów. Stąd większa liczba przegranych na czas, zwłaszcza w UltraBullet, gdzie czas jest jeszcze bardziej ograniczony.
+Dłuższe partie (Rapid, Klasyczne):
+
+W przypadku dłuższych partii, gdzie gracze mają więcej czasu na przemyślenie ruchów, skupiają się na bardziej strategicznej i solidnej grze. Ostateczność czasowa nie jest tak intensywna, co skutkuje mniejszą liczbą przegranych na czas.
+Jednocześnie, w dłuższych partiach, gdy gra staje się trudniejsza do wygrania lub pozycja jest zbyt złożona, gracze często decydują się na poddanie lub przyjęcie remisu, co również wpływa na statystyki.
 
 Jak ACPL różni się między konkretnymi formatami czasowymi?
 
