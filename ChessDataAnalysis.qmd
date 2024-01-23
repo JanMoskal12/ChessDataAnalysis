@@ -13,13 +13,16 @@ library(gganimate)
 library(plotly)
 library(kableExtra)
 library(knitr)
+library(treemap)
+library(ggridges)
+library(RColorBrewer)
 ```
 
 ```{r, include=FALSE}
 data <- readRDS("cleaned_data.rds")
 
 
-zView(data)
+View(data)
 glimpse(data)
 ```
 
@@ -46,26 +49,23 @@ Jak widać wraz z większą ilością czasu gry rośnie liczba remisów. Jest to
 
 Dla kontrastu dane dotyczące przeciętnych graczy Lichessa:
 
-Sprawdzam czy któreś otwarcia pojawiają się częściej w poszczególnych formatach czasowych
+Sprawdzam czy któreś otwarcia pojawiają się częściej w poszczególnych formatach czasowych.
 
 ```{r}
-data %>% group_by(opening_name) %>% count(sort = TRUE) #defensywne, w top 10 tylko dwa otwarcia 1.e4 tylko dwa mecze na 20000 z King's Knight Opening
-
 ubu <- data %>% filter(speed == "ultraBullet") %>% 
   group_by(opening_name) %>%  count(sort = TRUE) %>% 
   head(n = 10)# defensywne i elastyczne, "krótkie" ruchy bardzo popularne
 
 bu <- data %>% filter(speed == "bullet") %>% 
   group_by(opening_name) %>%  count(sort = TRUE) %>% 
-  head(n = 10)#elastyczne trochę więcej ruchów z 1.e4, dużo większa liczba unikalnych otwarć
+  head(n = 10) #elastyczne trochę więcej ruchów z 1.e4, dużo większa liczba unikalnych otwarć
 
 bl <- data %>% filter(speed == "blitz") %>% 
   group_by(opening_name) %>%  count(sort = TRUE) %>% 
   head(n = 10)# mniej defensywnie, obrona sycylisjka (więcej 1.e4)
 
 ra <- data %>%
-  filter(!is.na(opening_name)) %>% 
-  filter(speed == "rapid") %>% 
+  filter(speed == "rapid" & !is.na(opening_name)) %>% 
   group_by(opening_name) %>%  count(sort = TRUE) %>% 
   head(n = 10) # solidne, bardziej agresywne otwarcia sporo 1.e4 caro-kann
 
@@ -73,25 +73,115 @@ cl <- data %>% filter(speed == "classical") %>%
   group_by(opening_name) %>%  count(sort = TRUE) %>% 
   head(n = 10)# solidne, więcej 1.e4
 
+number_of_openings <- data.frame( 
+  c(
+  "UltraBullet",
+  "Bullet",
+  "Blitz",
+  "Rapid",
+  "Classical"
+  ),
+  c(
+  nrow(data %>% filter(speed == "ultraBullet") %>% group_by(opening_name) %>%  count(sort = TRUE)),
+  nrow(data %>% filter(speed == "bullet") %>% group_by(opening_name) %>%  count(sort = TRUE)),
+  nrow(data %>% filter(speed == "blitz") %>% group_by(opening_name) %>%  count(sort = TRUE)),
+  nrow(data %>% filter(speed == "rapid" & !is.na(opening_name)) %>% group_by(opening_name) %>%  count(sort = TRUE)),
+  nrow(data %>% filter(speed == "classical") %>% group_by(opening_name) %>%  count(sort = TRUE)))
+  )
 
-print(c(nrow(ubu_opening), nrow(bu_opening), nrow(bl_opening), nrow(ra_opening), nrow(cl_opening)))
+colnames(number_of_openings) <- c("Format czasowy", "Liczba użytych otwarć w danym formacie")
+number_openings_table <- kable(number_of_openings) %>%
+  kable_styling(bootstrap_options = "striped", full_width = FALSE)
+
+
+ubu_opening <- data %>% 
+  filter(speed == "ultraBullet") %>%
+  group_by(opening_name) %>%
+  count(sort = TRUE) %>% 
+  head(n = 10)
+
+bu_opening <- data %>%
+  filter(speed == "bullet") %>% 
+  group_by(opening_name) %>%
+  count(sort = TRUE) %>% 
+  head(n = 10)
+
+bl_opening <- data %>%
+  filter(speed == "blitz") %>% 
+  group_by(opening_name) %>%
+  count(sort = TRUE) %>% 
+  head(n = 10)
+
+ra_opening <- data %>%
+  filter(!is.na(opening_name)) %>% 
+  filter(speed == "rapid") %>% 
+  group_by(opening_name) %>%
+  count(sort = TRUE) %>% 
+  head(n = 10)
+
+cl_opening <- data %>%
+  filter(speed == "classical") %>% 
+  group_by(opening_name) %>%
+  count(sort = TRUE) %>% 
+  head(n = 10)
+
+colnames(ubu_opening) <- c("UltraBullet Top 10 Otwarć", "Liczba meczy")
+colnames(bu_opening) <- c("Bullet Top 10 Otwarć", "Liczba meczy")
+colnames(bl_opening) <- c("Blitz Top 10 Otwarć", "Liczba meczy")
+colnames(ra_opening) <- c("Rapid Top 10 Otwarć", "Liczba meczy")
+colnames(cl_opening) <- c("Classical Top 10 Otwarć", "Liczba meczy")
+
+ubu_table <- kable(ubu_opening) %>%
+  kable_styling(bootstrap_options = "striped", full_width = FALSE) %>% 
+  row_spec(9 , background = "yellow", bold = TRUE, color = "black") %>% 
+  row_spec(c(4, 7), background = "orange", bold = TRUE, color = "black") %>% 
+  row_spec(c(1, 2, 3, 5, 6, 8, 10), background = "red", bold = TRUE, color = "black")
+
+bu_table <- kable(bu_opening) %>%
+  kable_styling(bootstrap_options = "striped", full_width = FALSE) %>% 
+  row_spec(c(2, 4), background = "green", bold = TRUE, color = "black") %>% 
+  row_spec(c(7, 10), background = "yellow", bold = TRUE, color = "black") %>% 
+  row_spec(c(1, 3, 5, 6), background = "orange", bold = TRUE, color = "black") %>% 
+  row_spec(c(8, 9), background = "red", bold = TRUE, color = "black")
+
+bl_table <- kable(bl_opening) %>%
+  kable_styling(bootstrap_options = "striped", full_width = FALSE) %>% 
+  row_spec(c(1, 6), background = "green", bold = TRUE, color = "black") %>% 
+  row_spec(c(5, 9), background = "yellow", bold = TRUE, color = "black") %>% 
+  row_spec(c(3, 8, 10), background = "orange", bold = TRUE, color = "black") %>% 
+  row_spec(c(2, 4, 7), background = "red", bold = TRUE, color = "black")
+
+ra_table <- kable(ra_opening) %>%
+  kable_styling(bootstrap_options = "striped", full_width = FALSE) %>% 
+  row_spec(c(1, 3), background = "green", bold = TRUE, color = "black") %>% 
+  row_spec(7, background = "yellow", bold = TRUE, color = "black") %>% 
+  row_spec(c(2, 6, 8, 9), background = "orange", bold = TRUE, color = "black") %>% 
+  row_spec(c(4, 5, 10), background = "red", bold = TRUE, color = "black")
+
+cl_table <- kable(cl_opening) %>%
+  kable_styling(bootstrap_options = "striped", full_width = FALSE) %>% 
+  row_spec(c(1, 2), background = "green", bold = TRUE, color = "black") %>% 
+  row_spec(c(3, 6, 8), background = "orange", bold = TRUE, color = "black") %>% 
+  row_spec(c(4, 5, 7, 9, 10), background = "red", bold = TRUE, color = "black")
+
+save_kable(ubu_table, file = "ubu_table.html")
+save_kable(bu_table, file = "bu_table.html")
+save_kable(bl_table, file = "bl_table.html")
+save_kable(ra_table, file = "ra_table.html")
+save_kable(cl_table, file = "cl_table.html")
+save_kable(number_openings_table, file = "n_openings_table.html")
 tables_list <- list(ubu$opening_name, bu$opening_name, bl$opening_name, ra$opening_name, cl$opening_name)
-
 count_values <- function(tables_list) {
   all_values <- unlist(tables_list)
   value_counts <- table(all_values)
   return(data.frame(value = names(value_counts), count = as.numeric(value_counts)))
 }
-
-
 result <- count_values(tables_list)
-result %>% arrange(desc(count))
-
 ```
 
 Liczba unikalnych otwarć wzrasta wraz z długością gry. W skrócie, w miarę wydłużania się czasu na partię, gracze są bardziej skłonni eksperymentować z różnymi otwarciami, a strategie stają się bardziej zróżnicowane. W szybszych formatach często dominują ruchy elastyczne, a w dłuższych partach pojawiają się bardziej solidne i strategiczne otwarcia.
 
-Jak wygląda dystrybucja tytułów graczy w zależności od formatu czasowego?
+Jak wygląda rozkład procentowy tytułów graczy w zależności od formatu czasowego?
 
 ```{r}
 w_players <- data %>%
@@ -113,18 +203,32 @@ most_comon_titles <- data %>%
 players_titles %>% 
   filter(title %in% most_comon_titles$players_white_user_title) %>% 
   ggplot(aes(x = fct_infreq(speed), fill = title)) +
-  geom_bar()
-
+  geom_bar() +
+  labs(x = NULL, y = "Liczba graczy mająca gry w danym formacie",
+       title = "Dystrybucja tytułów graczy w zależności od formatu czasowego") +
+  theme_minimal() +
+  theme(panel.background = element_rect(fill = "lightgrey"),
+        legend.background = element_rect(fill = "lightblue"),
+        plot.background = element_rect(fill = "lightgrey")) 
 
 players_titles %>% 
   filter(title %in% most_comon_titles$players_white_user_title) %>% 
   ggplot(aes(x = fct_infreq(speed), fill = title)) +
-  geom_bar(position = "fill")
+  geom_bar(position = "fill") +
+  labs(title = "Udział procentowy tytułów graczy w zależności od formatu czasowego",
+       x = NULL,
+       y = "Proporcje procentowe tytułów",
+       fill = "Tytuł gracza") +
+  theme_minimal() +
+  theme(panel.background = element_rect(fill = "lightgrey"),
+        legend.background = element_rect(fill = "lightblue"),
+        plot.background = element_rect(fill = "lightgrey")) 
+  ggsave("percentage_of_titles_by_time_format.png")
 ```
 
-Taki rozkład graczy tytulowanych dla każdego formatu czasowego jest z pewnością związany z umiejętnościami i doświadczeniem graczy. Silni gracze mogą być bardziej skłonni do wybierania szybszych partii, podczas gdy gracze bez tytułów mogą preferować dłuższe partie, gdzie mają więcej czasu na analizę i naukę. To zjawisko może wpływać na obserwowaną dystrybucję tytułów w różnych formatach czasowych. Te dwa wykresy ukazują wiele rzeczy, część może wydawać się nieintuicyjna np. w drugim wykresie stosunek graczy bez tytułu do wszystkich graczy spada wraz ze spadkiem długości meczu, jednak nie dla ultraBulleta, dlaczego Moje hipoteza to możliwość unikania ultraBulleta przez graczy tytułowanych, ponieważ preferują bardziej zaawansowane i strategiczne gry, gdzie ich umiejętności są lepiej wykorzystywane. UltraBullet, charakteryzujący się szybkimi ruchami i chaotyczną rozgrywką, przyciąga różnorodne grupy graczy, a dominacja graczy bez tytułów może wynikać z bardziej rekreacyjnego podejścia do tej formy rozgrywki. Na wykresie pierwszym w oczy rzuca się jeszcze jedna rzecz to znaczy: im krótszy format czasowy tym mniejsza różnorodność graczy. To może mieć powiązanie z tym co piałem wcześniej, wielu graczy nietytułowanych próbuje swoich sił w szachach klasycznych, dlatego jest ich tak dużo, za to w szachach szybkich i blyskawicznych rządzą mocni gracze tytułowani i nie ma aż tak dużo graczy nietytułowanych (wciąż bardzo dużo)
+Taki rozkład graczy tytulowanych dla każdego formatu czasowego jest z pewnością związany z umiejętnościami i doświadczeniem graczy. Silni gracze mogą być bardziej skłonni do wybierania szybszych partii, podczas gdy gracze bez tytułów mogą preferować dłuższe partie, gdzie mają więcej czasu na analizę i naukę. To zjawisko może wpływać na obserwowaną dystrybucję tytułów w różnych formatach czasowych. Wykres ten ukazuje wiele rzeczy, część może wydawać się nieintuicyjna np. stosunek graczy bez tytułu do wszystkich graczy spada wraz ze spadkiem długości meczu, jednak nie dla ultraBulleta, dlaczego? Moje hipoteza to możliwość unikania ultraBulleta przez graczy tytułowanych, ponieważ preferują bardziej zaawansowane i strategiczne gry, gdzie ich umiejętności są lepiej wykorzystywane. UltraBullet, charakteryzujący się szybkimi ruchami i chaotyczną rozgrywką, przyciąga różnorodne grupy graczy, a dominacja graczy bez tytułów może wynikać z bardziej rekreacyjnego podejścia do tej formy rozgrywki.
 
-Jak powiązany jest ranking graczy z ich tytułąmi?
+Jak powiązany jest ranking graczy z ich tytułami dla konkretnych formatów szachowych?
 
 ```{r}
 w_players_rt <- data %>%
@@ -145,11 +249,19 @@ players_ratings_titles <- rbind(w_players_rt, b_players_rt) %>%
 players_ratings_titles %>% 
   filter(title %in% most_comon_titles$players_white_user_title) %>%
   ggplot(aes(x = reorder(title, -rating), y = rating, fill = reorder(title, -rating))) +
-  geom_boxplot() +
+  geom_violin() +
+  labs(y = "Ranking gracza",
+       x = "Tytuł gracza",
+       title = "Związek rankingu z tytułem gracza dla poszczególnych formatów czasowych") +
+  facet_wrap(~speed) +
   theme_minimal() +
-  theme(legend.position = "none") + 
-  labs(y = "Ranking gracza", x = "Tytuł gracza") #+
-  #facet_wrap(~speed)
+  theme(panel.background = element_rect(fill = "lightgrey"),
+        legend.position = "none",
+        plot.background = element_rect(fill = "lightgrey"),
+        plot.title = element_text(hjust = 0.2, face = "bold", size = 13))   
+
+
+ggsave("rating_VS_title_for_each_speed.png")
 ```
 
 Nie ma tutaj nic zaskakującego gracze, gracze z najwyższymi tytułami mają najwyższe rankingi
@@ -170,15 +282,35 @@ b_players_r <- data %>%
 
 players_ratings <- rbind(w_players_r, b_players_r) %>% distinct(player, speed, .keep_all = TRUE) # Zamiast usuwać powtarzające się to zamienić na średnią to dać średnią
 
+label_info <- data.frame(
+  c("Ultra Bullet", "Bullet", "Blitz", "Rapid", "Classical"),
+  c(2000, 2800, 2650, 2450, 2100),
+  c(120, 180, 350, 430, 440)
+)
+colnames(label_info) <- c("speed", "rating", "n")
+
 players_ratings %>% 
   group_by(speed) %>% 
   ggplot(aes(x = rating, color = speed)) +
-  geom_freqpoly(linewidth = 2)
+  geom_freqpoly(linewidth = 2) +
+  geom_text(data = label_info,
+            aes(x = rating, y = n, label = speed, color = speed),
+            fontface = "bold", size = 5) +
+  theme_minimal() +
+  theme(legend.position = "none",
+        plot.title = element_text(face = "bold", hjust = 0.2, size = 14),
+        panel.background = element_rect(fill = "lightgrey"),
+        plot.background = element_rect(fill = "lightgrey")) +
+  labs(title = "Związek między rankiem graczy, a formatem czasowym",
+       x = "Ranking gracza",
+       y = "Liczba graczy")
+
+ggsave("rating_VS_speed.png")
 ```
 
 Tutaj widać, to o czym wcześniej mówiłem to znaczy gracze bez tytułów, wybierają chętniej partie z wiekszą ilością czasu, za to gracze z tytułami te krótsze formaty. Tutaj po rankingach można zobaczyć to samo.
 
-Czy średnia analiza ACPL różni się między konkretnymi formatami czasowymi?
+Jak ACPL różni się między konkretnymi formatami czasowymi?
 
 ```{r}
 w_players_acpl <- data %>%
@@ -196,10 +328,20 @@ players_acpl <- rbind(w_players_acpl, b_players_acpl) %>%
 
 
 players_acpl %>% 
-  ggplot(aes(x = fct_reorder(speed, -acpl), y = acpl, fill = speed)) +
-  geom_boxplot() +
-  labs(x = NULL, y = "Average Centipawn Loss dla graczy") +
-  theme(legend.position = "none")
+  ggplot(aes(y = fct_reorder(speed, -acpl), x = acpl, fill = speed)) +
+  geom_density_ridges() +
+  theme_ridges() +
+  labs(title = "ACPL dla poszczególnych formatów czasowych",
+       y = NULL,
+       x = "Average Centipawn Loss dla graczy") +
+
+  theme(legend.position = "none",
+        axis.title.x = element_text(hjust = 0.4),
+        plot.title = element_text(face = "bold", hjust = 0.2, size = 14),
+        panel.background = element_rect(fill = "lightgrey"),
+        plot.background = element_rect(fill = "lightgrey"))
+
+ggsave("acpl_for_each_speed.png")
 ```
 
 Tak jak można było się spodziewać, w grach z większym ograniczniem czasowym gracze popełniają więcej poważnych błędów
@@ -209,11 +351,30 @@ Tak jak można było się spodziewać, w grach z większym ograniczniem czasowym
 Jak będzię wyglądała dystrybucja poszczególnych statusów dla różnych formatów czasowych?
 
 ```{r}
-data %>% 
-  ggplot(aes(x = speed, fill = status)) +
-  geom_bar(position = "fill") +
-  labs(x = NULL)
+tree_data <- data %>% 
+  filter(!(status %in% c("cheat", "noStart", "stalemate", "timeout"))) %>% 
+  group_by(speed, status) %>% 
+  count() %>% 
+  filter(n > 200)
+
+treemap(tree_data,
+        index = c("speed", "status"),
+        vSize = "n", type="index",
+        fontsize.labels=c(15,12),                
+        fontcolor.labels=c("white","orange"),    
+        fontface.labels=c(2,1),                  
+        bg.labels=c("transparent"),              
+        align.labels=list(
+          c("center", "center"), 
+          c("right", "bottom")
+        ),                                  
+        overlap.labels=0.5,                     
+        inflate.labels=F,                        
+        title = "Rozkład wartości poszczególnych statusów dla różnych formatów czasowych"
+)
 ```
+
+Tak jak można było się spodziewać więcej przegranych na czas będzie dla krótkich partii, za to więcej poddań i remisów dla tych dłuższych.
 
 ### Players user provisional:
 
@@ -255,7 +416,10 @@ top_5_moves <- first_move_data %>%
   first_move_data %>% 
   filter(first_move %in% top_5_moves$first_move) %>% 
   ggplot(aes(x = speed, fill = first_move)) +
-  geom_bar(position = "fill")
+  geom_bar(position = "fill") +
+  coord_polar()
+  
+# Do poprawienia ale do dodania
 ```
 
 ### Duration:
@@ -282,9 +446,9 @@ players_titles_connections <- data %>%
   group_by(players_white_user_title, players_black_user_title) %>% 
   summarise(n = n(),
             mean_white_winner = mean(winner)) %>% 
-  filter(n > 100) %>% 
-  arrange(mean_white_winner) %>% 
-  filter(players_white_user_title == "None" | players_black_user_title == "None")
+  filter(n > 5) %>% 
+  arrange(mean_white_winner) #%>% 
+  #filter(players_white_user_title == "None" | players_black_user_title == "None")
 
 players_titles_connections$combined_titles <- paste(players_titles_connections$players_white_user_title, 
                                                     players_titles_connections$players_black_user_title,
@@ -328,8 +492,6 @@ p <- sankeyNetwork(Links = links, Nodes = nodes,
                      Source = "IDsource", Target = "IDtarget",
                      Value = "n", NodeID = "name", 
                      sinksRight=FALSE, colourScale=ColourScal, nodeWidth=40, fontSize=13, nodePadding=20)
-
-p
 ```
 
 Widać wyraźnie dominację meczy między graczami bez tytułów
@@ -338,11 +500,14 @@ Jak ma się czas trwania partii do jej rezultatu?
 
 ```{r}
 data %>% 
+  filter(speed == "bullet") %>% 
   mutate(duration = duration_in_miliseconds / 1000) %>% 
   group_by(winner) %>% 
   summarise(mean_duration =  mean(duration)) %>% 
-  ggplot(aes(x = fct_infreq(winner, mean_duration), y = mean_duration, fill = winner)) +
+  ggplot(aes(x = fct_infreq(winner, mean_duration), y = mean_duration , fill = winner)) +
   geom_bar(stat = "identity")
+
+
 
 
 important_statuses <- data %>% 
@@ -352,7 +517,8 @@ important_statuses <- data %>%
 data %>% 
   filter(status %in% important_statuses$status) %>% 
   ggplot(aes(x = winner, fill = status)) +
-  geom_bar()
+  geom_bar(position = "fill") +
+  coord_polar() # Bez sensu
 ```
 
 Oczywiście, dla remisów czas ten będzie dużo dłuższy, ponieważ do remisó dochodzi przy przekroczeniu czasu przez jednego gracza, po długiej końcówce,
@@ -393,15 +559,6 @@ data %>%
   geom_boxplot()
 ```
 
-Jak się ma ranking gracza do jego tytułu
-
-```{r}
-data %>% 
-  filter(players_white_user_title %in% players_con$players_white_user_title & speed == "bullet") %>% 
-  ggplot(aes(x = players_white_user_title, y = players_white_rating, fill = players_white_user_title)) +
-  geom_boxplot()
-```
-
 Czy gry między graczami z dużą różnicą rankingu są sporo krótsze?
 
 ```{r}
@@ -421,15 +578,14 @@ data %>%
 
 Czy ACPL różni się między różnymi statusami gry?
 
-```{r, include=FALSE, warning=FALSE, message=FALSE}
+```{r}
 data %>% 
   filter(speed == "classical") %>% 
   filter(!(status %in% c("noStart", "cheat"))) %>% 
-  ggplot(aes(x = fct_reorder(status, -players_white_analysis_acpl),
+  ggplot(aes(x = status,
              y = players_white_analysis_acpl,
-             fill = fct_reorder(status, -players_white_analysis_acpl))) +
-  geom_boxplot() +
-  theme(legend.position = "none")
+              fill = status)) +
+  geom_bar(stat = "identity") 
 
 # Nic ciekawego
 ```
@@ -440,7 +596,7 @@ Jak mają się rodzaje otwarć do formatu czasowego, to znaczy jakie otwarcia sp
 data %>% 
   mutate(opening_eco_group = str_sub(opening_eco, start = 1, end = 1)) %>%
   filter(!is.na(opening_eco_group)) %>% 
-  ggplot(aes(x = opening_eco_group, fill = speed)) +
+  ggplot(aes(fill = opening_eco_group, x= speed)) +
   geom_bar(position = "fill")
 
 print(data %>% 
@@ -458,12 +614,14 @@ w_players_a <- data %>%
          players_white_user_name,
          players_white_analysis_inaccuracy,
          players_white_analysis_mistake, 
-         players_white_analysis_blunder) %>%
+         players_white_analysis_blunder,
+         players_white_analysis_acpl) %>%
   rename(
          player = players_white_user_name, 
          players_inaccuracies = players_white_analysis_inaccuracy,
          players_mistakes = players_white_analysis_mistake,
          players_blunders = players_white_analysis_blunder,
+         acpl = players_white_analysis_acpl
          )
 
 b_players_a <- data %>%
@@ -471,11 +629,13 @@ b_players_a <- data %>%
          players_black_user_name,
          players_black_analysis_inaccuracy,
          players_black_analysis_mistake, 
-         players_black_analysis_blunder) %>%
+         players_black_analysis_blunder,
+         players_black_analysis_acpl) %>%
   rename(player = players_black_user_name, 
          players_inaccuracies = players_black_analysis_inaccuracy,
          players_mistakes = players_black_analysis_mistake,
          players_blunders = players_black_analysis_blunder,
+         acpl = players_black_analysis_acpl
          )
 
 players_a <- rbind(w_players_a, b_players_a)
@@ -504,31 +664,40 @@ data_long <- data_long %>%
 
 
 legend_labels <- c(
-  "players_inaccuracies" = " Liczba nieścisłości (Inaccuracy)",
-  "players_mistakes" = "Liczba błędów (Mistake)",
-  "players_blunders" = "Liczba poważnych błędów (Blunder)"
+  "players_inaccuracies" = "Liczba nieścisłości",
+  "players_mistakes" = "Liczba błędów",
+  "players_blunders" = "Liczba poważnych błędów"
 )
+new_order <- c("classical", "rapid", "blitz", "bullet", "ultraBullet")
 
 
 p <- ggplot(data_long, aes(x = error_type, y = mean_a, fill = error_type)) +
-  geom_bar(stat = "identity", position = "dodge") +
-  labs(title = 'Speed: {closest_state}') +
-  scale_x_discrete(name = NULL, labels = NULL) +
-  scale_y_continuous(name = "Średnia liczba błędów gracza w grze") +
-  transition_states(states = speed, transition_length = 2, state_length = 1) +
-  ease_aes('linear') +
-  scale_fill_manual(values = c("red", "blue", "green"), name = "Rodzaj błędu", labels = legend_labels) + 
-  theme(legend.position = "top") +
-  theme_minimal() 
+      geom_bar(stat = "identity", position = "dodge") +
+      labs(title = 'Format czasowy: {closest_state}') +
+      scale_x_discrete(name = NULL, labels = c("Inaccuracies", "Mistakes", "Blunders")) +
+      scale_y_continuous(name = "Średnia liczba błędów gracza w grze") +
+      scale_fill_manual(values = c("red", "blue", "green"), name = "Rodzaj błędu", labels = legend_labels) + 
+      theme_minimal() +
+      theme(plot.title = element_text(hjust = 0.5, face = "bold", size = 14),
+            panel.background = element_rect(fill = "lightgrey"),
+            plot.background = element_rect(fill = "lightgrey"),
+            legend.position = "top") 
 
-p <- animate(p)
-p
+
+p <- p + 
+  transition_states(factor(speed, levels = new_order), transition_length = 2, state_length = 5) +
+  ease_aes("linear")
+
+
+
+animate(p)
+anim_save("number_of_mistakes_for_each_speed.gif")
 ```
 
 ```{r}
 data %>% 
   mutate(duration = duration_in_miliseconds / 1000) %>% 
-  filter(duration < 2000)
+  filter(duration < 2000) %>% 
   ggplot(aes(x = duration)) +
   geom_freqpoly()
 
@@ -541,7 +710,7 @@ data %>%
              y = players_white_analysis_blunder)) +
   geom_point() +
   labs(title = "Time : {frame_time}") +
-  transition_time(duration_min)
+  transition_time(duration_min)  #Kiepskie wykresy
 ```
 
 ```{r}
@@ -550,51 +719,13 @@ data %>%
   ggplot(aes(x = status,
              y = players_white_analysis_mistake,
              fill = status)) +
-  geom_boxplot()
+  geom_violin()
 
 
 # Partie z outoftime maja sporo wyzsze wskazania na bledy, co moze sugerowac ze gracze pod presją czasu zaczynają popełniać wiele błędów
 ```
 
 Wykres średnich wartości ACPL dla kazdego z ruchow we wszystkich partiach
-
-```{r}
-evaluations <- strsplit(data$analysis_eval, ",")
-max_length <- max(sapply(evaluations, length), na.rm = TRUE)
-
-fill_na <- function(x){
-  length(x) <- max_length
-  return(x)
-}
-
-evaluations <- lapply(evaluations, fill_na)
-col_names <- paste("Move", seq_along(evaluations), sep = "")
-
-
-
-eval_df <- do.call(data.frame, evaluations)
-names(eval_df) <- col_names
-eval_df <- as.data.frame(t(eval_df))
-rownames(eval_df) <- NULL
-
-eval_df_numeric <- as.data.frame(lapply(eval_df, as.numeric))
-
-
-srednie_wartosci <- colMeans(eval_df_numeric, na.rm = TRUE)
-
-df_srednie <- data.frame(Kolumna = names(srednie_wartosci), Srednia = srednie_wartosci)
-df_srednie <- head(df_srednie, n = 300)
-
-
-df_srednie %>% 
-  mutate(Kolumna = as.numeric(str_remove(Kolumna, "V"))) %>% 
-ggplot(aes(x = Kolumna, y = Srednia)) +
-  geom_line() +
-  geom_point(size = 0.5) +
-  labs(title = "Średnie wartości dla każdej kolumny",
-       x = "Kolumny", y = "Średnia Wartość") +
-  theme_minimal()
-```
 
 ```{r}
 data %>% 
@@ -649,27 +780,31 @@ data %>%
   ggplot(aes(x = speed, y = mean_moves_number, fill = speed)) + 
   geom_bar(stat = "identity") +
   theme(legend.position = "none")
+
+data %>% 
+  mutate(number_of_moves = str_count(moves, " ") + 1) %>% 
+  ggplot(aes(x = speed, y = number_of_moves)) +
+  geom_violin()
   
 # A to ciekawe, srednia dlugosc ruchow dla bulleta jest najwyzsza, zastanowic sie jak to mozliwe
 ```
 
-Jak się ma ranking gracza do jego tytułu?
-
-```{r}
-data %>% 
-  filter(speed == "bullet") %>% 
-  ggplot(aes(x = players_white_user_title, y = players_white_rating)) +
-  geom_boxplot()
-  
-# Można jeszcze popracować nad tym
-```
+Jak się ma ranking gracza do jego rankingu?
 
 ```{r}
 data %>% 
   filter(speed == "bullet") %>% 
   filter(players_white_user_title %in% c("GM", "IM", "FM", "None")) %>% 
   ggplot(aes(x = players_white_user_title, y = players_white_analysis_mistake)) +
-  geom_boxplot()
+  geom_violin()
 
 #Przepatrzec reszte moze da sie cos powiedziec na temat FM-ow
 ```
+
+```{r}
+  data_pie <- data %>%
+    count(winner)
+  pie(data_pie$n, labels = c("Black", "Draw", "White"), border = "white", col = brewer.pal(5, "Set2") ,radius = 1)
+```
+
+

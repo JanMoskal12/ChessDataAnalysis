@@ -1,11 +1,103 @@
 ---
-title: "ChessDataAnalysis-Result"
+title: "ChessDataAnalysis"
 author: "Jan Moskal"
 format: html
 editor: visual
 ---
 
 # Wstęp
+
+Szachy to starożytna gra strategiczna, która na przestrzeni wieków zdobyła uznanie jako niekwestionowany klasyk. Ta intelektualna rywalizacja, odbywająca się na szachownicy o wymiarach 8x8 pól, toczy się między dwoma graczami. Każdy z nich kieruje zestawem figur, z których każda ma swoje specyficzne ruchy i znaczenie.
+
+Celem gry jest sprawienie, aby król przeciwnika znalazł się w sytuacji, gdzie nie ma możliwości uniknięcia zagrożenia (szach-mat), jednocześnie dbając o bezpieczeństwo własnego króla. Plansza jest areną dla taktycznych manewrów, strategicznych kombinacji i dynamicznych pojedynków pomiędzy różnorodnymi szachowymi figurami.
+
+W szachach każda figura ma swój unikalny ruch, od hetmana, zdolnego do poruszania się w dowolnym kierunku, po skoczka, który wykonuje unikalne ruchy w kształcie litery "L".
+
+```{=html}
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      display: flex;
+      flex-wrap: wrap; 
+      justify-content: space-around;
+      margin: 0;
+      padding: 0;
+      font-weight: bold;
+    }
+    img {
+      display: block;
+      box-sizing: border-box;
+      margin-bottom: 20px; 
+      margin-left: 10px;
+      height: 30%;
+      border: 2px solid black; 
+      padding: 5px; 
+    }
+    .image-container {
+      width: 100%;
+      text-align: center; 
+    }
+  </style>
+</head>
+<body>
+
+<div class="image-container">
+  <img src="queen_moves.png" width="32%" align="left">
+  <img src="rook_moves.png" width=32% align="left">
+  <img src="bishop_moves.png" width="32%" align="left">
+</div>
+
+<div class="image-container">
+  <img src="knight_moves.png" width="32%" align="left">
+  <img src="king_moves.png" width="32%" align="left">
+  <img src="pawn_moves.png" width="32%" align="left">
+</div>
+
+</body>
+</html>
+```
+## Tytuły szachowe
+
+Tytuły szachowe to zaszczyty i wyróżnienia nadawane graczom na podstawie ich umiejętności i osiągnięć w świecie szachów. Ich zdobycie wymaga wielu lat praktyki, nauki i udziału w turniejach na różnych poziomach. Oto lista najważniejszych tytułów szachowych ( z tymi będziemy mieć do czynienia w analizie, jest ich więcej):
+
+1.  **GM - Grandmaster (Arcymistrz):**
+
+2.  **IM - International Master (Mistrz Międzynarodowy):**
+
+3.  **FM - FIDE Master (Mistrz FIDE):**
+
+4.  **CM - Candidate Master (Kandydat na Mistrza):**
+
+5.  **NM - National Master (Mistrz Krajowy):**
+
+## Formaty czasowe
+
+1.  **Klasyczne Szachy (Classical):**
+
+    -   Gracze mają do dyspozycji większą ilość czasu na partię (co najmniej 15 minut), co pozwala na dokładne przemyślenie posunięć.
+
+2.  **Rapid:**
+
+    -   Średni czas na partię wynosi od 10 do 15 minut.
+
+3.  **Szybkie Szachy (Blitz):**
+
+    -   Format zapewnia krótki czas na każde posunięcie, zazwyczaj od 3 do 5 minut na gracza na całą partię.
+
+4.  **Błyskawiczne Szachy (Bullet):**
+
+    -   Bardzo szybki format, zazwyczaj od 1 do 2 minut na gracza na całą partię.
+
+5.  **UltraBullet:**
+
+    -   Format ekstremalnie szybki, zazwyczaj oferujący bardzo ograniczony czas, często poniżej 1 minuty na całą partię.
+
+## ACPL
+
+Średnia utrata centipawnów (ACPL) to pojęcie odzwierciedlające, o ile "wartości" spada gracz, podejmując nieprawidłowe ruchy podczas gry w szachy. Im wyższa tym więcej błędów, wartości 100 odpowiada wartość jednego piona.
 
 # Analiza
 
@@ -47,7 +139,6 @@ Sprawdzam czy któreś otwarcia pojawiają się częściej w poszczególnych for
       margin: 0;
       padding: 0;
       font-weight: bold;
-      color: ;
     }
     iframe {
       display: block;
@@ -86,13 +177,11 @@ Liczba unikalnych otwarć rośnie wraz z długością trwania partii. Ogólnie r
 
 Na szczycie większości tabel pojawiają się otwarcia takie jak Indian Defense i Sicilian Defense. Są to strategie, które oferują szeroki zakres możliwości taktycznych i strategicznych, co sprawia, że są popularne w grach o wyższym poziomie.
 
-Ciekawym zjawiskiem jest obserwacja, że w przypadku formatu UltraBullet występują stosunkowo rzadkie otwarcia, takie jak Mieses Opening, Van't Kruijs Opening, czy Hungarian Opening. To może wynikać z tego, że gracze w UltraBullecie na początku partii starają się utrzymać elastyczność i bezpieczeństwo, co skłania ich do wybierania otwarć o mniejszym ryzyku.
-W rezultacie, różnice w wyborze otwarć w zależności od formatu czasowego mogą świadczyć nie tylko o preferencjach graczy, ale także o strategiach, jakie przyjmują w zależności od dostępnego czasu na podjęcie decyzji w grze (dobrze widoczne dla UltraBulleta).
+Ciekawym zjawiskiem jest obserwacja, że w przypadku formatu UltraBullet występują stosunkowo rzadkie otwarcia, takie jak Mieses Opening, Van't Kruijs Opening, czy Hungarian Opening. To może wynikać z tego, że gracze w UltraBullecie na początku partii starają się utrzymać elastyczność i bezpieczeństwo, co skłania ich do wybierania otwarć o mniejszym ryzyku. W rezultacie, różnice w wyborze otwarć w zależności od formatu czasowego mogą świadczyć nie tylko o preferencjach graczy, ale także o strategiach, jakie przyjmują w zależności od dostępnego czasu na podjęcie decyzji w grze (dobrze widoczne dla UltraBulleta).
 
 Jak wygląda rozkład procentowy tytułów graczy w zależności od formatu czasowego?
 
 ![](percentage_of_titles_by_time_format.png)
-
 
 Rozkład graczy posiadających tytuły w różnych formatach czasowych jest z pewnością związany z umiejętnościami i doświadczeniem graczy. Silniejsi gracze mogą być bardziej skłonni do wybierania szybszych partii, podczas gdy gracze bez tytułów mogą preferować dłuższe gry, w których mają więcej czasu na analizę i naukę. To zjawisko wpływa na obserwowaną dystrybucję tytułów w różnych formatach czasowych.
 
@@ -102,15 +191,13 @@ Jak powiązany jest ranking graczy z ich tytułami dla konkretnych formatów sza
 
 ![](rating_VS_title_for_each_speed.png){fig-align="center"}
 
-W trybach klasycznych, gdzie gracze mają znacznie więcej czasu na każdy ruch, partie są bardziej wymagające pod względem analizy, planowania i skomplikowanych strategii. Dlatego też, aby osiągnąć wysoki ranking w szachach klasycznych, gracz musi być zdolny utrzymać wysoki poziom gry przez dłuższy czas.
-Z kolei w trybach takich jak Bullet, gdzie czas na partię jest znacznie ograniczony, zdolność do szybkiego myślenia, podejmowania szybkich decyzji i umiejętności taktycznych są bardziej kluczowe. Gracze mogą szybko zwiększać swój ranking, zdobywając zwycięstwa w krótkich partiach, co przyspiesza proces awansowania na wyższe pozycje w rankingu.
-W rezultacie osiągnięcie wysokiego rankingu w szachach klasycznych może być bardziej czasochłonne i wymagać dłuższego okresu utrzymywania wysokiego poziomu gry, podczas gdy w trybach szybszych, takich jak Bullet, gracz może szybko osiągnąć wysoki ranking, zdobywając wiele zwycięstw w krótkim czasie. Ostateczny ranking zależy jednak od umiejętności danego gracza w konkretnym trybie gry.
+W trybach klasycznych, gdzie gracze mają znacznie więcej czasu na każdy ruch, partie są bardziej wymagające pod względem analizy, planowania i skomplikowanych strategii. Dlatego też, aby osiągnąć wysoki ranking w szachach klasycznych, gracz musi być zdolny utrzymać wysoki poziom gry przez dłuższy czas. Z kolei w trybach takich jak Bullet, gdzie czas na partię jest znacznie ograniczony, zdolność do szybkiego myślenia, podejmowania szybkich decyzji i umiejętności taktycznych są bardziej kluczowe. Gracze mogą szybko zwiększać swój ranking, zdobywając zwycięstwa w krótkich partiach, co przyspiesza proces awansowania na wyższe pozycje w rankingu. W rezultacie osiągnięcie wysokiego rankingu w szachach klasycznych może być bardziej czasochłonne i wymagać dłuższego okresu utrzymywania wysokiego poziomu gry, podczas gdy w trybach szybszych, takich jak Bullet, gracz może szybko osiągnąć wysoki ranking, zdobywając wiele zwycięstw w krótkim czasie. Ostateczny ranking zależy jednak od umiejętności danego gracza w konkretnym trybie gry.
 
 Czy istnieje związek między rankiem graczy a formatem czasowym?
 
 ![](rating_VS_speed.png){fig-align="center"}
 
-Tutaj zauważalne jest wspomniane wcześniej zjawisko – gracze bez tytułów wybierają zazwyczaj partie o dłuższym czasie, podczas gdy ci z tytułami preferują krótsze formaty. Podobna tendencja widoczna jest również w kontekście rankingów. Dodatkowym aspektem, na który wcześniej zwracałem uwagę, jest to, że utrzymanie i zdobycie wysokich rankingów w dłuższych partiach może być znacznie trudniejsze.
+Tutaj zauważalne jest wspomniane wcześniej zjawisko -- gracze bez tytułów wybierają zazwyczaj partie o dłuższym czasie, podczas gdy ci z tytułami preferują krótsze formaty. Podobna tendencja widoczna jest również w kontekście rankingów. Dodatkowym aspektem, na który wcześniej zwracałem uwagę, jest to, że utrzymanie i zdobycie wysokich rankingów w dłuższych partiach może być znacznie trudniejsze.
 
 Jak będzię wyglądał rozkład wartości poszczególnych statusów dla różnych formatów czasowych?
 
@@ -137,21 +224,22 @@ treemap(tree_data,
         title = "Rozkład wartości poszczególnych statusów dla różnych formatów czasowych"
 )
 ```
+
 Specyfika formatów czasowych ma duży wpływ na statystyki przegranych, poddań i remisów w poszczególnych trybach gry.
 
 UltraBullet i Bullet:
 
 W trybach tych, gdzie czas na całą partię wynosi jedynie kilkadziesiąt sekund, presja czasu jest niezwykle intensywna. Gracze muszą podejmować decyzje błyskawicznie, co zwiększa ryzyko popełnienia błędów. Stąd większa liczba przegranych na czas, zwłaszcza w UltraBullet, gdzie czas jest jeszcze bardziej ograniczony.
-Dłuższe partie (Rapid, Klasyczne):
 
-W przypadku dłuższych partii, gdzie gracze mają więcej czasu na przemyślenie ruchów, skupiają się na bardziej strategicznej i solidnej grze. Ostateczność czasowa nie jest tak intensywna, co skutkuje mniejszą liczbą przegranych na czas.
-Jednocześnie, w dłuższych partiach, gdy gra staje się trudniejsza do wygrania lub pozycja jest zbyt złożona, gracze często decydują się na poddanie lub przyjęcie remisu, co również wpływa na statystyki.
+Blitz, Rapid i Classical:
+
+W przypadku dłuższych partii, gdzie gracze mają więcej czasu na przemyślenie ruchów, skupiają się na bardziej strategicznej i solidnej grze. Ostateczność czasowa nie jest tak intensywna, co skutkuje mniejszą liczbą przegranych na czas. Jednocześnie, w dłuższych partiach, gdy gra staje się trudniejsza do wygrania lub pozycja jest zbyt złożona, gracze często decydują się na poddanie lub przyjęcie remisu, co również wpływa na statystyki.
 
 Jak ACPL różni się między konkretnymi formatami czasowymi?
 
 ![](acpl_for_each_speed.png){fig-align="center"}
 
-Tak jak można było się spodziewać, w grach z większym ograniczniem czasowym gracze popełniają więcej poważnych błędów.
+W grach z krótszym czasem na ruch gracze częściej popełniają poważne błędy. Najbardziej widoczne to jest w UltraBullet, gdzie średnia utrata centypionów na ruch (ACPL) bardzo często wynosi około 100, co równa się utracie jednego piona, nie rzadko sięga 150, a nawet sporo wyżej. W innych formatach wartości te są zazwyczaj bliższe 40-50.
 
 Jakie są najczęstsze połączenia między tytułami w grach?
 
@@ -178,16 +266,20 @@ sankeyNetwork(Links = links, Nodes = nodes,
               sinksRight=FALSE, colourScale=ColourScal, nodeWidth=40, fontSize=13, nodePadding=20)
 ```
 
-Widać wyraźnie dominację meczy między graczami bez tytułów.
+Można zauważyć wyraźną dominację meczy między graczami bez tytułów na platformie Lichess. Ci gracze stanowią większość uczestników rozgrywek, natomiast na kolejnych miejscach znajdują się gracze z tytułami GM, FM i IM. Co ciekawe, poza graczami bez tytułów, tytułowani szachiści nie angażują się tak często w mecze z innymi tytułowanymi graczami tego samego tytułu
+
+Takie zjawisko można tłumaczyć dostępnością graczy, gdzie gracz bez tytułu jest najbardziej liczny na platformie. Warto również zauważyć, że, mimo iż gracze tytułowani są obecni w rankingach najlepszych graczy, ich liczba jest ograniczona. Na skalę globalną platformy Lichess, ta tendencja wydaje się zrozumiała, ponieważ jest większa ilość graczy bez tytułów, co sprawia, że to oni stanowią główną grupę rywalizującą między sobą.
 
 Jak różnią się ilości błędów i ich rodzaje w zależności od formatu czasowego?
 
 ![](number_of_mistakes_for_each_speed.gif){fig-align="center"}
 
-Jak widać średnia liczba błędów rośnie wraz z długością gry.
+Podsumowując, w dłuższych partiach (klasycznych i rapidowych) zarówno błędy niepoważne, jak i poważne są obecne, ale błędy niepoważne dominują. Są to często minimalne niedokładności, takie jak zagranie "mniej poprawnego" wariantu czy odstępstwo od standardowego planu gry w danej pozycji. W UltraBullet liczba błędów, zwłaszcza poważnych, wzrasta zdecydowanie, co jest konsekwencją presji czasu i konieczności podejmowania szybkich decyzji. W tym formacie "missclicki" oraz ruchy wynikające z braku pomysłu na grę są bardziej powszechne.
 
-Jakie są wyniki pomiędzy graczami określonych tytułów?
+Jakie są wyniki pomiędzy graczami z konkretnym tytułów?
 
 ![](avg_results_for_titles_comp.png){fig-align="center"}
 
-Gracze z dużą różnicą tytułów mają wysokie przewagi.
+Gracze z istotną różnicą w tytułach wykazują wysokie przewagi, natomiast mecze pomiędzy graczami o tym samym tytule są zazwyczaj zrównoważone, z blisko 50% szans na zwycięstwo dla obu stron. Największe dysproporcje występują w starciach pomiędzy arcymistrzami (GM) a graczami bez tytułu, zawodnikami z tytułem narodowym i kandydatem na mistrza. W kolejności niżej w hierarchii tytułów, gracze ogrywający przeciwników bez tytułów również osiągają znaczne sukcesy (duże dysproporcje dla NM i GM wynikają z ograniczonej liczby rozegranych partii).
+
+# 
